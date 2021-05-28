@@ -1,8 +1,9 @@
 # JMU Math Summer 2021 REU on ODEs
 
-These solvers currently use the Boost ODEint library to solve an ODE
-numerically. The code is written such that both single- and double-precision
-versions are compiled by default.
+These solvers currently use the Boost
+[ODEint](https://www.boost.org/doc/libs/1_66_0/libs/numeric/odeint/doc/html/index.html)
+library to solve an ODE numerically. The code is written such that both single-
+and double-precision versions are compiled by default.
 
 ## Running a solver
 
