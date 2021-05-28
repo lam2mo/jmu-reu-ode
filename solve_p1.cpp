@@ -53,7 +53,7 @@ int main(int argc, const char* argv[])
 {
     // check parameters
     if (argc != 6) {
-        cout << "Usage: ./" << argv[0] << " <b> <c> <x0> <tn> <dt>" << endl;
+        cout << "Usage: " << argv[0] << " <b> <c> <x0> <tn> <dt>" << endl;
         return EXIT_FAILURE;
     }
 
