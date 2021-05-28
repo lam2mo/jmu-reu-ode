@@ -19,7 +19,7 @@ To compare the results of running with 64-bit vs. 32-bit IEEE floating point,
 use the provided `compare.sh` script. Example:
 
 ```
-./compare p1 1 0 1 2 0.1
+./compare.sh p1 1 0 1 2 0.1
 ```
 
 ## Adding new solvers
