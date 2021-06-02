@@ -47,11 +47,11 @@ void precalc_coefficients()
     ac[1] = a * ac[0]*ac[0] + b * ac[0] + c;
 
     for (int i = 2; i <= N; i++) {
-        ac[i] = b * ac[i-1];
+        ac[i] = 0.0;
         for (int k = 0; k < i; k++) {
-            ac[i] += a * ac[k] * ac[i-1-k];
+            ac[i] += ac[k] * ac[i-1-k];
         }
-        ac[i] /= i;
+        ac[i] = (a * ac[i] + b * ac[i-1]) / i;
     }
 }
 
