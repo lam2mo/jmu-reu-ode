@@ -31,6 +31,8 @@ typedef std::vector<real_t> state_t;
 real_t a, b, c, x0;
 double t0 = 0.0;
 double tn, dt;
+const int N = 100;
+real_t ac[N+1];
 
 // ODE system
 void ode(const state_t &x, state_t &dxdt, const real_t /*t*/)
@@ -38,14 +40,40 @@ void ode(const state_t &x, state_t &dxdt, const real_t /*t*/)
     dxdt[0] = a*pow(x[0],2.0) + b*x[0] + c;
 }
 
+// power series solution
+void precalc_coefficients()
+{
+    ac[0] = x0;
+    ac[1] = a * ac[0]*ac[0] + b * ac[0] + c;
+
+    for (int i = 2; i <= N; i++) {
+        ac[i] = b * ac[i-1];
+        for (int k = 0; k < i; k++) {
+            ac[i] += a * ac[k] * ac[i-1-k];
+        }
+        ac[i] /= i;
+    }
+}
+
+// power series solution using Horner's method
+real_t psm(const real_t t)
+{
+    real_t x = t * ac[N];
+    for (int j = N-1; j > 0; j--) {
+        x = t * (x + ac[j]);
+    }
+    x += ac[0];
+    return x;
+}
+
 // debug output helper
 void observe(const state_t &x, const real_t t)
 {
-    // known closed-form solution
-    real_t sol = 0.0; // TODO: add this
+    // power series solution
+    real_t sol = psm(t);
 
     cout << "t=" << setw(5) << t << "  x=" << setw(8) << x[0]
-         //<< "  sol=" << setw(8) << sol
+         << "  sol=" << setw(8) << sol
          << "  err=" << setw(12) << fabs(sol-x[0]) << endl;
 }
 
@@ -69,6 +97,9 @@ int main(int argc, const char* argv[])
     // initialize state
     state_t x(1);
     x[0] = x0;
+
+    // precalculate coefficients
+    precalc_coefficients();
 
     // show floating-point width
     cout << "sizeof(real_t)=" << sizeof(real_t) << endl;
