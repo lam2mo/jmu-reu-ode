@@ -4,10 +4,12 @@ LDFLAGS=
 
 TARGETS=solve_p1_fp64 solve_p1_fp32 \
         solve_p2_fp64 solve_p2_fp32 \
-		coeff
+		coeff ODEViewer.class
 
 all: $(TARGETS)
 
+ODEViewer.class: ODEViewer.java
+	javac $<
 
 solve_p1_fp64: solve_p1.cpp
 	$(CXX) $(CXXFLAGS) -Dreal_t=double -o $@ $^ $(LDFLAGS)

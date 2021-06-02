@@ -6,6 +6,7 @@
 *.lo
 *.o
 *.obj
+*.class
 
 # Precompiled Headers
 *.gch
@@ -15,6 +16,7 @@
 *.so
 *.dylib
 *.dll
+*.dSYM
 
 # Fortran module files
 *.mod
@@ -36,3 +38,7 @@ coeff
 
 # Data
 *out.*
+coeff.dat
+
+# Temporary
+*.swp

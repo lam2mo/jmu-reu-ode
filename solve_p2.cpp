@@ -110,7 +110,7 @@ int main(int argc, const char* argv[])
     runge_kutta4<state_t> stp;
 
     // integrate w/ debug output
-    size_t steps = integrate_const(stp, ode, x, t0, tn, dt, observe);
+    /*size_t steps =*/ integrate_const(stp, ode, x, t0, tn, dt, observe);
 
     // show final output
     //cout << "steps=" << steps << " x=" << x[0] << endl;
