@@ -72,9 +72,11 @@ void observe(const state_t &x, const real_t t)
     // power series solution
     real_t sol = psm(t);
 
-    cout << "t=" << setw(5) << t << "  x=" << setw(8) << x[0]
-         << "  sol=" << setw(8) << sol
-         << "  err=" << setw(12) << fabs(sol-x[0]) << endl;
+    //cout << "t=" << setw(5) << t << "  x=" << setw(8) << x[0]
+         //<< "  sol=" << setw(8) << sol
+         //<< "  err=" << setw(12) << fabs(sol-x[0]) << endl;
+    cout << setw(5) << t << setw(8) << x[0] << setw(8) << sol
+         << setw(12) << fabs(sol-x[0]) << endl;
 }
 
 int main(int argc, const char* argv[])
@@ -102,7 +104,7 @@ int main(int argc, const char* argv[])
     precalc_coefficients();
 
     // show floating-point width
-    cout << "sizeof(real_t)=" << sizeof(real_t) << endl;
+    //cout << "sizeof(real_t)=" << sizeof(real_t) << endl;
 
     // stepper
     runge_kutta4<state_t> stp;
@@ -111,7 +113,7 @@ int main(int argc, const char* argv[])
     size_t steps = integrate_const(stp, ode, x, t0, tn, dt, observe);
 
     // show final output
-    cout << "steps=" << steps << " x=" << x[0] << endl;
+    //cout << "steps=" << steps << " x=" << x[0] << endl;
 
     return EXIT_SUCCESS;
 }
