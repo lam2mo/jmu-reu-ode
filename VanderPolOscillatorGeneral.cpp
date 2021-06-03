@@ -29,6 +29,7 @@ void updateNthCoefficient(vector<double> &x, vector<double> &xprime, vector<doub
  }
 
 
+
 vector<double> coefficients(double a,double x0, double x00, int nn){
 	/* Inputs
 	 * a     : Parameters of ODE
