@@ -31,7 +31,7 @@ typedef std::vector<real_t> state_t;
 real_t a, b, c, x0;
 double t0 = 0.0;
 double tn, dt;
-const int N = 100;
+const int N = 10;
 real_t ac[N+1];
 
 // ODE system
@@ -40,10 +40,10 @@ void ode(const state_t &x, state_t &dxdt, const real_t /*t*/)
     dxdt[0] = a*pow(x[0],2.0) + b*x[0] + c;
 }
 
-// power series solution
-void precalc_coefficients()
+// power series solution at x
+void calc_coefficients(real_t x)
 {
-    ac[0] = x0;
+    ac[0] = x;
     ac[1] = a * ac[0]*ac[0] + b * ac[0] + c;
 
     for (int i = 2; i <= N; i++) {
@@ -63,6 +63,8 @@ real_t psm(const real_t t)
         x = t * (x + ac[j]);
     }
     x += ac[0];
+
+    calc_coefficients(x);
     return x;
 }
 
@@ -75,8 +77,8 @@ void observe(const state_t &x, const real_t t)
     //cout << "t=" << setw(5) << t << "  x=" << setw(8) << x[0]
          //<< "  sol=" << setw(8) << sol
          //<< "  err=" << setw(12) << fabs(sol-x[0]) << endl;
-    cout << setw(5) << t << setw(8) << x[0] << setw(8) << sol
-         << setw(12) << fabs(sol-x[0]) << endl;
+    cout << setw(8) << t << setw(16) << x[0] << setw(16) << sol
+         << setw(16) << fabs(sol-x[0]) << endl;
 }
 
 int main(int argc, const char* argv[])
@@ -101,7 +103,7 @@ int main(int argc, const char* argv[])
     x[0] = x0;
 
     // precalculate coefficients
-    precalc_coefficients();
+    calc_coefficients(x0);
 
     // show floating-point width
     //cout << "sizeof(real_t)=" << sizeof(real_t) << endl;
