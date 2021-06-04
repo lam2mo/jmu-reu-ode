@@ -4,7 +4,8 @@ LDFLAGS=
 
 TARGETS=solve_p1_fp64 solve_p1_fp32 \
         solve_p2_fp64 solve_p2_fp32 \
-		coeff ODEViewer.class
+		coeff ODEViewer.class \
+		VanderPolOscillatorGeneral
 
 all: $(TARGETS)
 
@@ -24,6 +25,9 @@ solve_p2_fp32: solve_p2.cpp
 	$(CXX) $(CXXFLAGS) -Dreal_t=float  -o $@ $^ $(LDFLAGS)
 
 coeff: coeff.cpp
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+
+VanderPolOscillatorGeneral: VanderPolOscillatorGeneral.cpp
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:

@@ -35,6 +35,7 @@
 solve_*_fp64
 solve_*_fp32
 coeff
+VanderPolOscillatorGeneral
 
 # Data
 *out.*
