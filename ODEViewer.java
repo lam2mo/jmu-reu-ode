@@ -93,6 +93,8 @@ class ODEViewer extends JFrame implements ChangeListener
             image.setIcon(new ImageIcon(img));
         } catch (IOException ex) {
             System.out.println(ex.getStackTrace());
+        } catch (NullPointerException ex) {
+            image.setIcon(null);
         }
     }
 
