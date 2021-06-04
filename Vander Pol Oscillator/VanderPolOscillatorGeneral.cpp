@@ -1,4 +1,7 @@
-#include<bits/stdc++.h>
+#include <iostream>
+#include <iomanip>
+#include <chrono>
+#include <vector>
 
 using namespace std;
 using namespace std::chrono;
@@ -38,7 +41,7 @@ vector<double> coefficients(double a,double x0, double x00, int nn){
 	 * Output:
 	 * coefficients of the nth polynomial approximation in increasing order
 	 * 
-	 * Runs in O(n^2)!!
+	 * Runs in O(n^2), memory O(n)
 	 */
 	 vector<double> x(nn,0);
 	 vector<double> deriv(nn,0);
@@ -87,10 +90,10 @@ vector<double> derivative(vector<double> f){
 pair<double, double> computeNext(double a,double x0, double x00, double step,bool forward,int n){
 	/*Inputs:
 	 * a,x0,x00: parameters of the ODE
-	 * step: value to be found
+	 * step: Size of the step
+	 * forward: if you want to go forward or backwards 
 	 * Outputs:
-	 * x(t) where t = x0+step and 
-	 * x(t) = ax(t)^2+bx(t)+c
+	 * x(t) where t = x0+step and x solves the vander pol oscillator problem
 	 */
 	 vector<double> coeff = coefficients(a,x0,x00,n);
 	 vector<double> deriv = derivative(coeff);
@@ -105,10 +108,11 @@ pair<double, double> computeNext(double a,double x0, double x00, double step,boo
 
 vector<double> generateSolutionStepper(double a,double x0, double x00, double step, bool forward, double end, int n){
 	/*Inputs:
-	 * a,b,c,x0: parameters of the ODE
-	 * step: value to be found
-	 * (beg,end): interval to find the solution
-	 * step: size of the step, expecting a positive value
+	 * a,x0,x00: parameters of the ODE
+	 * step: Size of the step
+	 * end : End point to solve the solution (solves in [0,end])
+	 * step: Size of the step, expecting a positive value
+	 * n   : Degree of the approximation
 	 * forward: if you want to go forward or backwards 
 	 * Output:
 	 * vector of solutions to the Vander Pol Oscillator equation
@@ -140,14 +144,28 @@ vector<double> generateSolutionNoStepper(double a, double x0, double x00, double
 
 
 
-int main(){
-	double a  = -1;
-	double x0 = 1;
-	double x00 = 1;
-	int n = 10;
-	double end = 2;
-	double step = 1/8.0;
+int main(int argc, const char* argv[]){
 	
+	// check parameters
+    if (argc != 6) {
+        cout << "Usage: " << argv[0] << " <a> <b> <c> <x0> <tn> <dt>" << endl;
+        return EXIT_FAILURE;
+    }
+
+    // parse parameters
+    double a  = stod(argv[1], NULL);
+    double x0  = stod(argv[2], NULL);
+    double x00  = stod(argv[3], NULL);
+    double end = stod(argv[4], NULL);
+    double step = stod(argv[5], NULL);
+	/*
+	a  = -1;
+	x0 = 1;
+	x00 = 1;
+	end = 2;
+	step = 1/8.0;
+	*/
+	int n = 10;
 	vector<double> coeff = coefficients(a,x0,x00,n);	
 	
 	vector<double> solutionStepper = generateSolutionStepper(a,x0,x00,step,1,end, n);
