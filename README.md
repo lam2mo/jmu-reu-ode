@@ -7,8 +7,8 @@ and double-precision versions are compiled by default.
 
 ## Running a solver
 
-To run an ODE solver, use the corresponding executable and provide any needed
-parameters. Example:
+To run an ODE solver, compile the corresponding executable with `make` and then
+run the resulting executable, providing any needed parameters. Example:
 
 ```
 ./solve_p1_fp64 1 0 1 2 0.1
@@ -21,6 +21,15 @@ use the provided `compare.sh` script. Example:
 
 ```
 ./compare.sh p1 1 0 1 2 0.1
+```
+
+## Running the graphical viewer
+
+To run the grpahical ODE solution viewer (requires Java and Gnuplot), run `make
+ODEViewer` and then launch the compiled viewer:
+
+```
+java ODEViewer
 ```
 
 ## Adding new solvers

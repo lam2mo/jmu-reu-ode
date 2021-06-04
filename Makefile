@@ -31,5 +31,5 @@ VanderPolOscillatorGeneral: VanderPolOscillatorGeneral.cpp
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
-	rm -f $(TARGETS)
+	rm -rf $(TARGETS) *.dSYM *.class
 
