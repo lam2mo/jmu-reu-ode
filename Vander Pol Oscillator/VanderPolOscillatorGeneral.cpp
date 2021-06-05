@@ -58,7 +58,6 @@ vector<double> coefficients(double a,double x0, double x00, int nn){
 		 x[n+2] = secondDeriv[n]/((n+2)*(n+1));
 		 updateNthCoefficient(x,deriv,square,n+2);
 	 }
-	 
 	 return x;
 }
 
@@ -106,7 +105,7 @@ pair<double, double> computeNext(double a,double x0, double x00, double step,boo
 }
 
 
-vector<double> generateSolutionStepper(double a,double x0, double x00, double step, bool forward, double end, int n){
+pair<vector<double>,vector<double>> generateSolutionStepper(double a,double x0, double x00, double step, bool forward, double end, int n){
 	/*Inputs:
 	 * a,x0,x00: parameters of the ODE
 	 * step: Size of the step
@@ -120,27 +119,21 @@ vector<double> generateSolutionStepper(double a,double x0, double x00, double st
 	 step = abs(step);
 	 vector<double> sol;
 	 sol.push_back(x0);
+	 vector<double> deriv;
+	 deriv.push_back(x00);
 	 double newx0 = x0;
 	 double newx00 = x00;
 	 for(int k = 1; step*k<=end; k++){
 		//cout<<step*k<<" "<<computeNext(a,b,c,solution[k-1],step,forward,n)<<"\n";
 		pair<double, double> cond = computeNext(a,newx0,newx00,step,forward,n);
 		sol.push_back(cond.first);
+		deriv.push_back(cond.second);
 		newx0 = cond.first;
 		newx00 = cond.second;		 
 	 }
-	 return sol;
+	 return {sol,deriv};
 }
 
-vector<double> generateSolutionNoStepper(double a, double x0, double x00, double step, double end, int n){
-	vector<double> coeff = coefficients(a,x0,x00,n);
-	vector<double> sol;
-	sol.push_back(x0);
-	 for(int k = 1; step*k<=end; k++){		 
-		 sol.push_back(eval(coeff,step*k));
-	 }
-	 return sol;
-}
 
 
 
@@ -168,8 +161,8 @@ int main(int argc, const char* argv[]){
 	int n = 10;
 	vector<double> coeff = coefficients(a,x0,x00,n);	
 	
-	vector<double> solutionStepper = generateSolutionStepper(a,x0,x00,step,1,end, n);
-	vector<double> solutionNoStepper = generateSolutionNoStepper(a,x0,x00,step,end, n);
+	vector<double> solutionStepper = generateSolutionStepper(a,x0,x00,step,1,end, n).first;
+	vector<double> derivSolution = generateSolutionStepper(a,x0,x00,step,1,end, n).second;
 	
 	cout<<setw(15)<<"t"<<setw(15)<<"No Stepper"<<setw(15)<<"Stepper"<<"\n";
 	for(int i = 0; i<solutionStepper.size(); i++){
@@ -177,13 +170,13 @@ int main(int argc, const char* argv[]){
 		cout.precision(5);
 		cout<<fixed<<setw(15)<<i*step<<" ";
 		double stepper = solutionStepper[i];
-		double noStepper = solutionNoStepper[i];
+		double deriv = derivSolution[i];
 		
-		if( abs(stepper)>dig || abs(noStepper)>dig ){
-			cout<<scientific<<setw(15)<<noStepper<<" "<<setw(15)<<stepper<<"\n";
+		if( abs(stepper)>dig || abs(deriv)>dig ){
+			cout<<scientific<<setw(15)<<stepper<<" "<<setw(15)<<deriv<<"\n";
 		}
 		else{					
-			cout<<fixed<<setw(15)<<noStepper<<" "<<setw(15)<<stepper<<"\n";
+			cout<<fixed<<setw(15)<<stepper<<" "<<setw(15)<<deriv<<"\n";
 		}
 	}
 }

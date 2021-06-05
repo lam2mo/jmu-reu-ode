@@ -20,8 +20,8 @@ class ODEViewer extends JFrame implements ChangeListener
     private final double PARAM_FACTOR = 100.0;
     private final int PARAM_COUNT = 5;
     private final String PARAM_LABEL[] =   {  "a",  "x0", "x00", "end", "dt"};
-    private final double PARAM_MIN[] =     { -2.0, -2.0 , -2.0 ,  0.0 ,  0.01 };
-    private final double PARAM_MAX[] =     {  2.0,  2.0 ,  2.0 ,  10.0,  0.10 };
+    private final double PARAM_MIN[] =     { -5.0, -2.0 , -2.0 ,  0.0 ,  0.01 };
+    private final double PARAM_MAX[] =     {  5.0,  2.0 ,  2.0 ,  20.0,  0.10 };
     private final double PARAM_DEFAULT[] = {  1.0,  1.0 ,  1.0 ,  1.0 ,  0.05 };
 
     // dynamice components
@@ -54,12 +54,23 @@ class ODEViewer extends JFrame implements ChangeListener
             tmpPanel.add(sliders[i]);
             sliderPanel.add(tmpPanel);
         }
+        //Buttons panel consists of a stack of panels
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new GridLayout(1,2));
+        this.setLayout(null);
+        setSize(700,20);
+        setResizable(false);
+        JButton graph = new JButton("Plot Solution");
+        buttonPanel.add(graph);
+        JButton derivativeVsPosition = new JButton("Plot Derivative vs Position");
+        buttonPanel.add(derivativeVsPosition);
 
         // main window consists of image panel and slider panel
         Container cp = getContentPane();
         cp.setLayout(new BorderLayout());
-        cp.add(imagePanel, BorderLayout.CENTER);
+        cp.add(imagePanel, BorderLayout.NORTH);
         cp.add(sliderPanel, BorderLayout.SOUTH);
+        cp.add(buttonPanel, BorderLayout.CENTER);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("ODE Viewer");
         setSize(700, 700);

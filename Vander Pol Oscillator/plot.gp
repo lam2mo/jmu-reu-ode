@@ -8,8 +8,8 @@ set term png
 set output "out.png"
 set key left box
 
-set logscale y
+#set logscale y
 
-plot fn using 1:2 title 'No Stepper' with linespoints, \
-     fn using 1:3 title 'Stepper' with linespoints
+plot fn using 2:3 title 'x vs x' ' with linespoints, \
+     #fn using 2:3 title 'No Stepper' with linespoints
 
