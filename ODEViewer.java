@@ -14,7 +14,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.imageio.ImageIO;
 
-class ODEViewer extends JFrame implements ChangeListener
+class ODEViewer extends JFrame implements ChangeListener, DocumentListener
 {
     // parameter info (currently hard-coded)
     private final double PARAM_FACTOR = 100.0;
@@ -26,7 +26,7 @@ class ODEViewer extends JFrame implements ChangeListener
 
     // dynamice components
     private JLabel image;
-    private JLabel labels[];
+    private JTextField values[];
     private JSlider sliders[];
 
     public ODEViewer()
@@ -39,19 +39,25 @@ class ODEViewer extends JFrame implements ChangeListener
         // slider panel consists of a stack of labels and sliders
         JPanel sliderPanel = new JPanel();
         sliderPanel.setLayout(new BoxLayout(sliderPanel, BoxLayout.PAGE_AXIS));
-        labels = new JLabel[PARAM_COUNT];
+        values = new JTextField[PARAM_COUNT];
         sliders = new JSlider[PARAM_COUNT];
         for (int i=0; i<PARAM_COUNT; i++) {
+            JPanel lblPanel = new JPanel();
+            lblPanel.setLayout(new BoxLayout(lblPanel, BoxLayout.LINE_AXIS));
+            JLabel lbl = new JLabel("   " + PARAM_LABEL[i] + " = ");
+            values[i] = new JTextField("" + PARAM_DEFAULT[i], 5);
+            values[i].getDocument().addDocumentListener(this);
+            lblPanel.add(lbl);
+            lblPanel.add(values[i]);
             JPanel tmpPanel = new JPanel();
-            tmpPanel.setLayout(new BoxLayout(tmpPanel, BoxLayout.LINE_AXIS));
-            labels[i] = new JLabel("   " + PARAM_LABEL[i]);
+            tmpPanel.setLayout(new BorderLayout());
             sliders[i] = new JSlider(
                     (int)(PARAM_MIN[i]     * PARAM_FACTOR),
                     (int)(PARAM_MAX[i]     * PARAM_FACTOR),
                     (int)(PARAM_DEFAULT[i] * PARAM_FACTOR));
             sliders[i].addChangeListener(this);
-            tmpPanel.add(labels[i]);
-            tmpPanel.add(sliders[i]);
+            tmpPanel.add(lblPanel, BorderLayout.WEST);
+            tmpPanel.add(sliders[i], BorderLayout.CENTER);
             sliderPanel.add(tmpPanel);
         }
 
@@ -65,18 +71,17 @@ class ODEViewer extends JFrame implements ChangeListener
         setSize(700, 700);
         setVisible(true);
 
-        stateChanged(null);
+        updatePlot();
     }
 
-    public void stateChanged(ChangeEvent e)
+    public void updatePlot()
     {
         // gather parameters for call to plotting script (also update labels)
         StringBuilder cmd = new StringBuilder("bash plot.sh");
         for (int i=0; i<PARAM_COUNT; i++) {
-            double value = (double)(sliders[i].getValue()) / PARAM_FACTOR;
+            double value = Double.parseDouble(values[i].getText());
             cmd.append(" ");
             cmd.append(value);
-            labels[i].setText("   " + PARAM_LABEL[i] + " = " + value);
         }
 
         // run script and wait for it to finish, then load the new image
@@ -97,6 +102,41 @@ class ODEViewer extends JFrame implements ChangeListener
             image.setIcon(null);
         }
     }
+
+    private boolean updating = false;
+
+    public void stateChanged(ChangeEvent e)
+    {
+        if (updating) return;
+        updating = true;
+        for (int i=0; i<PARAM_COUNT; i++) {
+            double value = (double)(sliders[i].getValue()) / PARAM_FACTOR;
+            values[i].setText("" + value);
+        }
+        updatePlot();
+        updating = false;
+    }
+
+    public void insertUpdate(DocumentEvent e)
+    {
+        if (updating) return;
+        updating = true;
+        try {
+            for (int i=0; i<PARAM_COUNT; i++) {
+                double value = Double.parseDouble(values[i].getText());
+                sliders[i].setValue((int)(value * PARAM_FACTOR));
+            }
+            updatePlot();
+        } catch (NumberFormatException ex) {
+            image.setIcon(null);
+        }
+        updating = false;
+    }
+    public void removeUpdate(DocumentEvent e)
+    {
+        insertUpdate(e);
+    }
+    public void changedUpdate(DocumentEvent e) { /* don't need to handle style updates */ }
 
     public static void main(String[] args)
     {
