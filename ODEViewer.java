@@ -84,10 +84,10 @@ class ODEViewer extends JFrame implements ChangeListener, DocumentListener
             }
             file.close();
         } catch (IOException ex) {
-            System.out.println("Could not read config file '" + configFile + "'");
-            System.out.println(ex.getStackTrace());
+            System.err.println("Could not read config file '" + configFile + "'");
+            ex.printStackTrace();
         } catch (NumberFormatException ex) {
-            System.out.println("Invalid parameter: " + line);
+            System.err.println("Invalid parameter: " + line);
         }
 
         // image panel consists of just a single label
@@ -176,7 +176,7 @@ class ODEViewer extends JFrame implements ChangeListener, DocumentListener
             image.setIcon(new ImageIcon(img));
 
         } catch (IOException ex) {
-            System.out.println(ex.getStackTrace());
+            ex.printStackTrace();
         } catch (NullPointerException ex) {
             image.setIcon(null);
         }
