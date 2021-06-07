@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <cmath>
@@ -33,6 +34,9 @@ double t0 = 0.0;
 double tn, dt;
 const int N = 10;
 real_t ac[N+1];
+
+// output stream
+ofstream out;
 
 // ODE system
 void ode(const state_t &x, state_t &dxdt, const real_t /*t*/)
@@ -74,10 +78,10 @@ void observe(const state_t &x, const real_t t)
     // power series solution
     real_t sol = psm(t);
 
-    //cout << "t=" << setw(5) << t << "  x=" << setw(8) << x[0]
+    //out << "t=" << setw(5) << t << "  x=" << setw(8) << x[0]
          //<< "  sol=" << setw(8) << sol
          //<< "  err=" << setw(12) << fabs(sol-x[0]) << endl;
-    cout << setw(8) << t << setw(16) << x[0] << setw(16) << sol
+    out << setw(8) << t << setw(16) << x[0] << setw(16) << sol
          << setw(16) << fabs(sol-x[0]) << endl;
 }
 
@@ -112,7 +116,9 @@ int main(int argc, const char* argv[])
     runge_kutta4<state_t> stp;
 
     // integrate w/ debug output
+    out.open("out.dat");
     /*size_t steps =*/ integrate_const(stp, ode, x, t0, tn, dt, observe);
+    out.close();
 
     // show final output
     //cout << "steps=" << steps << " x=" << x[0] << endl;

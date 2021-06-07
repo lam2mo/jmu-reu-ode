@@ -1,11 +1,13 @@
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 #include <chrono>
 #include <vector>
 
 using namespace std;
 using namespace std::chrono;
 
+ofstream out;
 
 double nthCoefficientProduct(vector<double> &x, vector<double> &y, int n){
 	/* This method computes the nth coefficient of x*y, runs in O(n)
@@ -141,7 +143,7 @@ int main(int argc, const char* argv[]){
 	
 	// check parameters
     if (argc != 6) {
-        cout << "Usage: " << argv[0] << " <a> <b> <c> <x0> <tn> <dt>" << endl;
+        cout << "Usage: " << argv[0] << " <a> <x0> <xp0> <tn> <dt>" << endl;
         return EXIT_FAILURE;
     }
 
@@ -164,19 +166,21 @@ int main(int argc, const char* argv[]){
 	vector<double> solutionStepper = generateSolutionStepper(a,x0,x00,step,1,end, n).first;
 	vector<double> derivSolution = generateSolutionStepper(a,x0,x00,step,1,end, n).second;
 	
-	cout<<setw(15)<<"t"<<setw(15)<<"No Stepper"<<setw(15)<<"Stepper"<<"\n";
+    out.open("out.dat");
+	//cout<<setw(15)<<"t"<<setw(15)<<"No Stepper"<<setw(15)<<"Stepper"<<"\n";
 	for(int i = 0; i<solutionStepper.size(); i++){
 		int dig = 1000;
-		cout.precision(5);
-		cout<<fixed<<setw(15)<<i*step<<" ";
+		out.precision(5);
+		out<<fixed<<setw(15)<<i*step<<" ";
 		double stepper = solutionStepper[i];
 		double deriv = derivSolution[i];
 		
 		if( abs(stepper)>dig || abs(deriv)>dig ){
-			cout<<scientific<<setw(15)<<stepper<<" "<<setw(15)<<deriv<<"\n";
+			out<<scientific<<setw(15)<<stepper<<" "<<setw(15)<<deriv<<"\n";
 		}
 		else{					
-			cout<<fixed<<setw(15)<<stepper<<" "<<setw(15)<<deriv<<"\n";
+			out<<fixed<<setw(15)<<stepper<<" "<<setw(15)<<deriv<<"\n";
 		}
 	}
+    out.close();
 }
