@@ -1,10 +1,10 @@
 CXX=g++
-CXXFLAGS=-g -O2 -Wall -std=c++11
+CXXFLAGS=-g -O0 -Wall -std=c++11
 LDFLAGS=
 
 TARGETS=solve_p1_fp64 solve_p1_fp32 \
         solve_p2_fp64 solve_p2_fp32 \
-		coeff ODEViewer.class
+		izhikevich_fp64 izhikevich_fp32 coeff ODEViewer.class
 
 all: $(TARGETS)
 
@@ -21,6 +21,12 @@ solve_p2_fp64: solve_p2.cpp
 	$(CXX) $(CXXFLAGS) -Dreal_t=double -o $@ $^ $(LDFLAGS)
 
 solve_p2_fp32: solve_p2.cpp
+	$(CXX) $(CXXFLAGS) -Dreal_t=float  -o $@ $^ $(LDFLAGS)
+
+izhikevich_fp64: izhikevich.cpp
+	$(CXX) $(CXXFLAGS) -Dreal_t=double -o $@ $^ $(LDFLAGS)
+
+izhikevich_fp32: izhikevich.cpp
 	$(CXX) $(CXXFLAGS) -Dreal_t=float  -o $@ $^ $(LDFLAGS)
 
 coeff: coeff.cpp
