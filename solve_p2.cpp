@@ -67,22 +67,75 @@ real_t psm(const real_t t)
         x = t * (x + ac[j]);
     }
     x += ac[0];
-
-    calc_coefficients(x);
     return x;
+}
+
+// x \left( t \right) =1/2\,{\frac {1}{a} \left( \tan \left( 1/2\,t\sqrt
+// {4\,ac-{b}^{2}}+\arctan \left( {\frac {2\,{\it x0}\,a+b}{\sqrt {4\,ac-
+// {b}^{2}}}} \right)  \right) \sqrt {4\,ac-{b}^{2}}-b \right) }
+//
+// @author Kevin Rojas
+real_t solution(real_t a,real_t b, real_t c, real_t x0, real_t t)
+{
+    /* Inputs x:
+     * a,b,c: Parameters of the ODE
+     * x0   : Initial condition
+     * x    : Point to evaluate the exact solution on
+     * Output:
+     * x(t) where x solves x' = ax+bx+c, x(0) = x0
+     */
+
+    real_t disc = b*b-4.0*a*c;
+    //cout << "discriminant: " << disc << endl;
+    real_t val = 0.0;
+
+    if (disc > 0.0) {
+       real_t x1 = (-b+sqrt(disc))/(2.0*a);
+       real_t x2 = (-b-sqrt(disc))/(2.0*a);
+       real_t A = abs((x0-x2)/(x0-x1))*exp((x2-x1)*a*t);
+       real_t val1 = (A*x1-x2)/(A-1);
+
+       real_t B = -A;
+       real_t val2 = (B*x1-x2)/(B-1);
+
+       if((val1 >x2 && val1> x1) || (val1<x2 && val1<x1)){
+           val = val1;
+       }
+       else{
+           val = val2;
+       }
+       val = val2;
+       // TODO: deal with the absolute value?
+
+    } else if (disc < 0.0) {
+       real_t A = b/(2.0*sqrt(a));
+       real_t D = -disc/(4.0*a*a);
+       real_t c0 = atan((x0+A)/sqrt(D));
+       val = sqrt(D)*tan(a*sqrt(D)*t+c0)-A;
+
+    } else {
+       real_t x1 = -b/(2.0*a);
+       real_t c0 = -1.0/(x0-x1);
+       val = (x1-1.0/(a*t+c0));
+    }
+    return val;
 }
 
 // debug output helper
 void observe(const state_t &x, const real_t t)
 {
-    // power series solution
-    real_t sol = psm(t);
+    real_t sol = solution(a, b, c, x0, t);
+    real_t psm_sol = psm(0);
 
-    //out << "t=" << setw(5) << t << "  x=" << setw(8) << x[0]
-         //<< "  sol=" << setw(8) << sol
-         //<< "  err=" << setw(12) << fabs(sol-x[0]) << endl;
-    out << setw(8) << t << setw(16) << x[0] << setw(16) << sol
-         << setw(16) << fabs(sol-x[0]) << endl;
+    // re-center power series
+    calc_coefficients(psm(dt));
+
+    // write output
+    out << setw(8) << t;
+    out << setw(16) << sol;
+    out << setw(16) << x[0] << setw(16) << fabs(sol-x[0]);
+    out << setw(16) << psm_sol << setw(16) << fabs(sol-psm_sol);
+    out << endl;
 }
 
 int main(int argc, const char* argv[])
