@@ -11,8 +11,10 @@ FP32FILE="${PROBLEM}_fp32.txt"
 shift
 
 make -s solve_${PROBLEM}_fp64 solve_${PROBLEM}_fp32
-./solve_${PROBLEM}_fp64 $@ >${FP64FILE}
-./solve_${PROBLEM}_fp32 $@ >${FP32FILE}
+./solve_${PROBLEM}_fp64 $@
+mv out.dat "$FP64FILE"
+./solve_${PROBLEM}_fp32 $@
+mv out.dat "$FP32FILE"
 paste ${FP64FILE} ${FP32FILE}
 rm -f ${FP64FILE} ${FP32FILE}
 
