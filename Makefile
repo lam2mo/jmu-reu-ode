@@ -4,7 +4,7 @@ LDFLAGS=
 
 TARGETS=solve_p1_fp64 solve_p1_fp32 \
         solve_p2_fp64 solve_p2_fp32 \
-        solve_p4 coeff ODEViewer.class
+        solve_p3 solve_p4 coeff ODEViewer.class
 
 all: $(TARGETS)
 
@@ -22,6 +22,9 @@ solve_p2_fp64: solve_p2.cpp
 
 solve_p2_fp32: solve_p2.cpp
 	$(CXX) $(CXXFLAGS) -Dreal_t=float  -o $@ $^ $(LDFLAGS)
+
+solve_p3: solve_p3.cpp
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 solve_p4: solve_p4.cpp
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
