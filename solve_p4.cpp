@@ -26,7 +26,7 @@ void updateNthCoefficient(vector<double> &x, vector<double> &xx, vector<double> 
 	 */
 	 xx[n] = nthCoefficientProduct(x,x,n);
 	 xxx[n] = nthCoefficientProduct(xx,x,n);
- }
+}
 
 
 
@@ -47,7 +47,7 @@ vector<double> coefficients(double x0, int nn){
 	 updateNthCoefficient(x,xx,xxx,0);
 	 
 	 for(int n = 0; n<nn-1; n++){
-		 xprime[n] = xx[n]-xxx[n];
+		 xprime[n] = xx[n]-xxx[n]; //x' = x^2-x^3
 		 x[n+1] = xprime[n]/(n+1);
 		 updateNthCoefficient(x,xx,xxx,n+1);
 	 }
@@ -89,12 +89,14 @@ pair<double, double> computeNext(double x0,double step,bool forward,int n){
 	 */
 	 vector<double> coeff = coefficients(x0,n);
 	 vector<double> deriv = derivative(coeff);
+	 step = forward ? step : -step; 
 	 if(forward){
-		return {eval(coeff,step), eval(deriv,step)};
+		 step = step;
 	 }
 	 else{
-		return {eval(coeff,-step), eval(deriv,-step)};
-	}
+		 step = -step;
+	 }
+	 return {eval(coeff,step), eval(deriv,step)};	
 }
 
 
@@ -115,7 +117,7 @@ pair<vector<double>,vector<double>> generateSolutionStepper(double x0,double ste
 	 deriv.push_back(pow(x0,2.0)-pow(x0,3.0));
 	 double newx0 = x0;
 	 for(int k = 1; step*k<=end; k++){
-		pair<double, double> cond = computeNext(newx0,step,forward,n);
+		pair<double, double> cond = computeNext(newx0,step,forward,n); //Values of x(step) x'(step)
 		sol.push_back(cond.first);
 		deriv.push_back(cond.second);
 		newx0 = cond.first; 
