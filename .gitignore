@@ -37,6 +37,8 @@ solve_*_fp32
 solve_p4
 coeff
 VanderPolOscillatorGeneral
+izhikevich_fp32
+izhikevich_fp64
 
 # Data
 *out.*
