@@ -3,6 +3,7 @@
 #include <fstream>
 #include <chrono>
 #include <vector>
+#include <cmath>
 
 using namespace std;
 using namespace std::chrono;
@@ -118,7 +119,7 @@ pair<vector<double>,vector<double>> generateSolutionStepper(double a,double x0, 
 	 * Output:
 	 * vector of solutions to the Vander Pol Oscillator equation
 	 */
-	 step = abs(step);
+	 step = fabs(step);
 	 vector<double> sol;
 	 sol.push_back(x0);
 	 vector<double> deriv;
@@ -175,7 +176,7 @@ int main(int argc, const char* argv[]){
 		double stepper = solutionStepper[i];
 		double deriv = derivSolution[i];
 		
-		if( abs(stepper)>dig || abs(deriv)>dig ){
+		if( fabs(stepper)>dig || fabs(deriv)>dig ){
 			out<<scientific<<setw(15)<<stepper<<" "<<setw(15)<<deriv<<"\n";
 		}
 		else{					
