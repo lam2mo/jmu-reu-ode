@@ -42,8 +42,8 @@ izhikevich_fp64
 izhikevich_fp32
 
 # Data
-*out.*
-coeff.dat
+*.dat
+out.png
 
 # Temporary
 *.swp

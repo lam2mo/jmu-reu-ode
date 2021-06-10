@@ -123,7 +123,7 @@ pair<vector<T>, vector<T> > generateSolutionStepper(T x0,T step, bool forward, T
 	 deriv.push_back(pow(x0,2.0)-pow(x0,3.0));
 	 double newx0 = x0;
 	 for(int k = 1; step*k<=end; k++){
-		pair<T, T> cond = computeNext(newx0,step,forward,n);
+		pair<T, T> cond = computeNext<T>(newx0,step,forward,n);
 		sol.push_back(cond.first);
 		deriv.push_back(cond.second);
 		newx0 = cond.first;
@@ -131,33 +131,23 @@ pair<vector<T>, vector<T> > generateSolutionStepper(T x0,T step, bool forward, T
 	 return make_pair(sol,deriv);
 }
 
-int main(int argc, const char* argv[])
+template<class T>
+void solve_p4(T x0, T end, T step, int n, string fn)
 {
-	// check parameters
-    if (argc != 4) {
-        cout << "Usage: " << argv[0] << " <x0> <tn> <dt>" << endl;
-        return EXIT_FAILURE;
-    }
-
-    // parse parameters
-    double x0  = stod(argv[1], NULL);
-    double end = stod(argv[2], NULL);
-    double step = stod(argv[3], NULL);
-	int n = 10;
-	vector<double> coeff = coefficients(x0,n);
+	vector<T> coeff = coefficients(x0,n);
 	bool forward = 0;
-	vector<double> solutionStepperB = generateSolutionStepper(x0,step,forward,end, n).first;
-	vector<double> derivSolutionB = generateSolutionStepper(x0,step,forward,end, n).second;
+	vector<T> solutionStepperB = generateSolutionStepper<T>(x0,step,forward,end, n).first;
+	vector<T> derivSolutionB = generateSolutionStepper<T>(x0,step,forward,end, n).second;
 	forward = 1;
-	vector<double> solutionStepperF = generateSolutionStepper(x0,step,forward,end, n).first;
-	vector<double> derivSolutionF = generateSolutionStepper(x0,step,forward,end, n).second;
-    out.open("out.dat");
+	vector<T> solutionStepperF = generateSolutionStepper<T>(x0,step,forward,end, n).first;
+	vector<T> derivSolutionF = generateSolutionStepper<T>(x0,step,forward,end, n).second;
+    out.open(fn);
 	for(int i = solutionStepperB.size()-1; i>=0; i--){
 		int dig = 1000;
 		out.precision(5);
 		out<<fixed<<setw(15)<<-i*step<<" ";
-		double stepper = solutionStepperB[i];
-		double deriv = derivSolutionB[i];
+		T stepper = solutionStepperB[i];
+		T deriv = derivSolutionB[i];
 
 		if( fabs(stepper)>dig || fabs(deriv)>dig ){
 			out<<scientific<<setw(15)<<stepper<<" "<<setw(15)<<deriv<<"\n";
@@ -170,8 +160,8 @@ int main(int argc, const char* argv[])
 		int dig = 1000;
 		out.precision(5);
 		out<<fixed<<setw(15)<<i*step<<" ";
-		double stepper = solutionStepperF[i];
-		double deriv = derivSolutionF[i];
+		T stepper = solutionStepperF[i];
+		T deriv = derivSolutionF[i];
 
 		if( fabs(stepper)>dig || fabs(deriv)>dig ){
 			out<<scientific<<setw(15)<<stepper<<" "<<setw(15)<<deriv<<"\n";
@@ -181,4 +171,27 @@ int main(int argc, const char* argv[])
 		}
 	}
     out.close();
+}
+
+int main(int argc, const char* argv[])
+{
+	// check parameters
+    if (argc != 5) {
+        cout << "Usage: " << argv[0] << " <x0> <tn> <dt> <rtype>" << endl;
+        return EXIT_FAILURE;
+    }
+
+    // parse parameters
+    double x0  = stod(argv[1], NULL);
+    double end = stod(argv[2], NULL);
+    double step = stod(argv[3], NULL);
+    string rtype = string(argv[4]);
+
+    if (rtype == "float") {
+        solve_p4((float)x0, (float)end, (float)step, 10, "out.dat");
+    } else {
+        solve_p4(x0, end, step, 10, "out.dat");
+    }
+
+    return EXIT_SUCCESS;
 }
