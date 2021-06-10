@@ -90,12 +90,6 @@ pair<double, double> computeNext(double x0,double step,bool forward,int n){
 	 vector<double> coeff = coefficients(x0,n);
 	 vector<double> deriv = derivative(coeff);
 	 step = forward ? step : -step; 
-	 if(forward){
-		 step = step;
-	 }
-	 else{
-		 step = -step;
-	 }
 	 return {eval(coeff,step), eval(deriv,step)};	
 }
 
