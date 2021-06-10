@@ -8,7 +8,6 @@
 #include <functional>
 #include <sstream>
 
-
 using namespace std;
 using namespace std::chrono;
 
@@ -28,32 +27,30 @@ T nthCoefficientProduct(vector<T> &x, vector<T> &y, int n){
 template <class T>
 void updateNthCoefficient(vector<T> &x, vector<T> &xx, vector<T> &xxx, int n){
 	/* This method asumes we have the n-th coefficient for x, it then updates the rest
-	 * 
+	 *
 	 * This method runs in O(N)
 	 */
 	 xx[n] = nthCoefficientProduct(x,x,n);
 	 xxx[n] = nthCoefficientProduct(xx,x,n);
  }
 
-
-
 template <class T>
 vector<T> coefficients(T x0, int nn){
 	/* Inputs
 	 * n : order of the polynomial approximation
-	 * x0: initial conditions 
+	 * x0: initial conditions
 	 * Output:
 	 * coefficients of the nth polynomial approximation in increasing order
-	 * 
+	 *
 	 * Runs in O(n^2), memory O(n)
 	 */
 	 vector<T> x(nn,0);
 	 vector<T> xx(nn,0);
 	 vector<T> xxx(nn,0);
 	 vector<T> xprime(nn,0);
-	 x[0] = x0; //The initial condition is x0 
+	 x[0] = x0; //The initial condition is x0
 	 updateNthCoefficient<T>(x,xx,xxx,0);
-	 
+
 	 for(int n = 0; n<nn-1; n++){
 		 xprime[n] = xx[n]-xxx[n];
 		 x[n+1] = xprime[n]/(n+1);
@@ -69,9 +66,9 @@ T eval(vector<T> coeff, T x){
 	 * coeff: coefficients of the polynomial to be evaluated in increasing order
 	 * x    : number to be evaluated
 	 * Output:
-	 * p(x) 
+	 * p(x)
 	 */
-	
+
 	//Horners Algorithm
 	T val = 0;
 	for(int i = coeff.size()-1; i>=0; i--){
@@ -94,7 +91,7 @@ pair<T, T> computeNext(T x0, T step,bool forward,int n){
 	/*Inputs:
 	 * x0  : parameters of the ODE
 	 * step: Size of the step
-	 * forward: if you want to go forward or backwards 
+	 * forward: if you want to go forward or backwards
 	 * Outputs:
 	 * x(t) where t = x0+step and x solves the equation x' = x^2-x^3
 	 */
@@ -115,7 +112,7 @@ pair<vector<T>, vector<T> > generateSolutionStepper(T x0,T step, bool forward, T
 	 * step: Size of the step
 	 * end : End point to solve the solution (solves in [0,end])
 	 * n   : Degree of the approximation
-	 * forward: if you want to go forward or backwards 
+	 * forward: if you want to go forward or backwards
 	 * Output:
 	 * vector of solutions to the equation x' = x^2-x^3
 	 */
@@ -129,17 +126,16 @@ pair<vector<T>, vector<T> > generateSolutionStepper(T x0,T step, bool forward, T
 		pair<T, T> cond = computeNext(newx0,step,forward,n);
 		sol.push_back(cond.first);
 		deriv.push_back(cond.second);
-		newx0 = cond.first; 
+		newx0 = cond.first;
 	 }
 	 return make_pair(sol,deriv);
 }
 
-
-int main(int argc, const char* argv[]){
-	
+int main(int argc, const char* argv[])
+{
 	// check parameters
     if (argc != 4) {
-        cout << "Usage: " << argv[0] << "<x0> <tn> <dt>" << endl;
+        cout << "Usage: " << argv[0] << " <x0> <tn> <dt>" << endl;
         return EXIT_FAILURE;
     }
 
@@ -148,7 +144,7 @@ int main(int argc, const char* argv[]){
     double end = stod(argv[2], NULL);
     double step = stod(argv[3], NULL);
 	int n = 10;
-	vector<double> coeff = coefficients(x0,n);	
+	vector<double> coeff = coefficients(x0,n);
 	bool forward = 0;
 	vector<double> solutionStepperB = generateSolutionStepper(x0,step,forward,end, n).first;
 	vector<double> derivSolutionB = generateSolutionStepper(x0,step,forward,end, n).second;
@@ -162,11 +158,11 @@ int main(int argc, const char* argv[]){
 		out<<fixed<<setw(15)<<-i*step<<" ";
 		double stepper = solutionStepperB[i];
 		double deriv = derivSolutionB[i];
-		
+
 		if( fabs(stepper)>dig || fabs(deriv)>dig ){
 			out<<scientific<<setw(15)<<stepper<<" "<<setw(15)<<deriv<<"\n";
 		}
-		else{					
+		else{
 			out<<fixed<<setw(15)<<stepper<<" "<<setw(15)<<deriv<<"\n";
 		}
 	}
@@ -176,11 +172,11 @@ int main(int argc, const char* argv[]){
 		out<<fixed<<setw(15)<<i*step<<" ";
 		double stepper = solutionStepperF[i];
 		double deriv = derivSolutionF[i];
-		
+
 		if( fabs(stepper)>dig || fabs(deriv)>dig ){
 			out<<scientific<<setw(15)<<stepper<<" "<<setw(15)<<deriv<<"\n";
 		}
-		else{					
+		else{
 			out<<fixed<<setw(15)<<stepper<<" "<<setw(15)<<deriv<<"\n";
 		}
 	}
