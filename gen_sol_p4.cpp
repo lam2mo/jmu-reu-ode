@@ -26,7 +26,7 @@ T nthCoefficientProduct(vector<T> &x, vector<T> &y, int n){
 }
 
 template <class T>
-T updateNthCoefficient(vector<T> &x, vector<T> &xx, vector<T> &xxx, int n){
+void updateNthCoefficient(vector<T> &x, vector<T> &xx, vector<T> &xxx, int n){
 	/* This method asumes we have the n-th coefficient for x, it then updates the rest
 	 * 
 	 * This method runs in O(N)
@@ -52,12 +52,12 @@ vector<T> coefficients(T x0, int nn){
 	 vector<T> xxx(nn,0);
 	 vector<T> xprime(nn,0);
 	 x[0] = x0; //The initial condition is x0 
-	 updateNthCoefficient(x,xx,xxx,0);
+	 updateNthCoefficient<T>(x,xx,xxx,0);
 	 
 	 for(int n = 0; n<nn-1; n++){
 		 xprime[n] = xx[n]-xxx[n];
 		 x[n+1] = xprime[n]/(n+1);
-		 updateNthCoefficient(x,xx,xxx,n+1);
+		 updateNthCoefficient<T>(x,xx,xxx,n+1);
 	 }
 	 return x;
 }
@@ -101,10 +101,10 @@ pair<T, T> computeNext(T x0, T step,bool forward,int n){
 	 vector<T> coeff = coefficients(x0,n);
 	 vector<T> deriv = derivative(coeff);
 	 if(forward){
-		return {eval(coeff,step), eval(deriv,step)};
+		return make_pair(eval(coeff,step), eval(deriv,step));
 	 }
 	 else{
-		return {eval(coeff,-step), eval(deriv,-step)};
+		return make_pair(eval(coeff,-step), eval(deriv,-step));
 	}
 }
 
@@ -131,7 +131,7 @@ pair<vector<T>, vector<T> > generateSolutionStepper(T x0,T step, bool forward, T
 		deriv.push_back(cond.second);
 		newx0 = cond.first; 
 	 }
-	 return {sol,deriv};
+	 return make_pair(sol,deriv);
 }
 
 
