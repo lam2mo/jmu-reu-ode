@@ -99,7 +99,7 @@ vector<T> derivative(vector<T> f){
 }
 
 template<class T>
-pair<T, T> computeNext(T x0, T step,bool forward,int n){
+pair<T, T> computeNext(T x0, T step, bool forward, int n){
     /*Inputs:
      * x0  : parameters of the ODE
      * step: Size of the step
@@ -118,7 +118,7 @@ pair<T, T> computeNext(T x0, T step,bool forward,int n){
 }
 
 template<class T>
-pair<vector<T>, vector<T> > generateSolutionStepper(T x0,T step, bool forward, T end, int n){
+pair<vector<T>, vector<T> > generateSolutionStepper(T x0, T step, bool forward, T end, int n){
     /*Inputs:
      * x0  : parameters of the ODE
      * step: Size of the step
@@ -136,6 +136,7 @@ pair<vector<T>, vector<T> > generateSolutionStepper(T x0,T step, bool forward, T
     deriv.push_back(xx-x0*xx);
     T newx0 = x0;
     for(int k = 1; step*k<=end; k++){
+        //cout << "step " << k << endl;
         pair<T, T> cond = computeNext<T>(newx0,step,forward,n);
         sol.push_back(cond.first);
         deriv.push_back(cond.second);
