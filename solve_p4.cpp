@@ -110,7 +110,7 @@ pair<T, T> computeNext(T x0, T step,bool forward,int n){
     vector<T> coeff = coefficients(x0,n);
     vector<T> deriv = derivative(coeff);
     if(forward){
-       return make_pair(eval<T>(coeff,step), eval<T>(deriv,step));
+        return make_pair(eval<T>(coeff,step), eval<T>(deriv,step));
     }
     else{
         return make_pair(eval<T>(coeff,-step), eval<T>(deriv,-step));
@@ -136,10 +136,10 @@ pair<vector<T>, vector<T> > generateSolutionStepper(T x0,T step, bool forward, T
     deriv.push_back(xx-x0*xx);
     T newx0 = x0;
     for(int k = 1; step*k<=end; k++){
-       pair<T, T> cond = computeNext<T>(newx0,step,forward,n);
-       sol.push_back(cond.first);
-       deriv.push_back(cond.second);
-       newx0 = cond.first;
+        pair<T, T> cond = computeNext<T>(newx0,step,forward,n);
+        sol.push_back(cond.first);
+        deriv.push_back(cond.second);
+        newx0 = cond.first;
     }
     return make_pair(sol,deriv);
 }
