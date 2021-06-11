@@ -8,10 +8,22 @@
 #include <functional>
 #include <sstream>
 
+#include <boost/multiprecision/cpp_bin_float.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+
 using namespace std;
 using namespace std::chrono;
+using namespace boost::multiprecision;
+
+typedef number<backends::cpp_bin_float<11, backends::digit_base_2, void, std::int16_t, -14,   15>, et_off> cpp_bin_float_half;
+typedef number<backends::cpp_bin_float<8,  backends::digit_base_2, void, std::int16_t, -126, 127>, et_off> cpp_bin_float_bfloat;
 
 ofstream out;
+
+template <class T>
+T absval(T v) {
+    return (v < T(0)) ? -v : v;
+}
 
 template <class T>
 T nthCoefficientProduct(vector<T> &x, vector<T> &y, int n){
@@ -98,10 +110,10 @@ pair<T, T> computeNext(T x0, T step,bool forward,int n){
 	 vector<T> coeff = coefficients(x0,n);
 	 vector<T> deriv = derivative(coeff);
 	 if(forward){
-		return make_pair(eval(coeff,step), eval(deriv,step));
+		return make_pair(eval<T>(coeff,step), eval<T>(deriv,step));
 	 }
 	 else{
-		return make_pair(eval(coeff,-step), eval(deriv,-step));
+		return make_pair(eval<T>(coeff,-step), eval<T>(deriv,-step));
 	}
 }
 
@@ -116,12 +128,13 @@ pair<vector<T>, vector<T> > generateSolutionStepper(T x0,T step, bool forward, T
 	 * Output:
 	 * vector of solutions to the equation x' = x^2-x^3
 	 */
-	 step = fabs(step);
+	 step = absval(step);
 	 vector<T> sol;
 	 sol.push_back(x0);
 	 vector<T> deriv;
-	 deriv.push_back(pow(x0,2.0)-pow(x0,3.0));
-	 double newx0 = x0;
+     T xx = x0 * x0;
+	 deriv.push_back(xx-x0*xx);
+	 T newx0 = x0;
 	 for(int k = 1; step*k<=end; k++){
 		pair<T, T> cond = computeNext<T>(newx0,step,forward,n);
 		sol.push_back(cond.first);
@@ -134,6 +147,7 @@ pair<vector<T>, vector<T> > generateSolutionStepper(T x0,T step, bool forward, T
 template<class T>
 void solve_p4(T x0, T end, T step, int n, string fn)
 {
+    //cout << "size = " << sizeof(x0) << endl;
 	vector<T> coeff = coefficients(x0,n);
 	bool forward = 0;
 	vector<T> solutionStepperB = generateSolutionStepper<T>(x0,step,forward,end, n).first;
@@ -149,7 +163,7 @@ void solve_p4(T x0, T end, T step, int n, string fn)
 		T stepper = solutionStepperB[i];
 		T deriv = derivSolutionB[i];
 
-		if( fabs(stepper)>dig || fabs(deriv)>dig ){
+		if( absval(stepper)>dig || absval(deriv)>dig ){
 			out<<scientific<<setw(15)<<stepper<<" "<<setw(15)<<deriv<<"\n";
 		}
 		else{
@@ -163,7 +177,7 @@ void solve_p4(T x0, T end, T step, int n, string fn)
 		T stepper = solutionStepperF[i];
 		T deriv = derivSolutionF[i];
 
-		if( fabs(stepper)>dig || fabs(deriv)>dig ){
+		if( absval(stepper)>dig || absval(deriv)>dig ){
 			out<<scientific<<setw(15)<<stepper<<" "<<setw(15)<<deriv<<"\n";
 		}
 		else{
@@ -189,6 +203,14 @@ int main(int argc, const char* argv[])
 
     if (rtype == "float") {
         solve_p4((float)x0, (float)end, (float)step, 10, "out.dat");
+    } else if (rtype == "quad") {
+        solve_p4(cpp_bin_float_quad(x0), cpp_bin_float_quad(end), cpp_bin_float_quad(step), 10, "out.dat");
+    } else if (rtype == "half") {
+        solve_p4(cpp_bin_float_half(x0), cpp_bin_float_half(end), cpp_bin_float_half(step), 10, "out.dat");
+    } else if (rtype == "bfloat") {
+        solve_p4(cpp_bin_float_bfloat(x0), cpp_bin_float_bfloat(end), cpp_bin_float_bfloat(step), 10, "out.dat");
+    } else if (rtype == "rational") {
+        solve_p4(cpp_rational(x0), cpp_rational(end), cpp_rational(step), 10, "out.dat");
     } else {
         solve_p4(x0, end, step, 10, "out.dat");
     }
