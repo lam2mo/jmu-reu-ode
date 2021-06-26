@@ -83,7 +83,7 @@ vector<double> solve(double x0,double step, double end, int n, bool forward){
     double newx0 = x0;
     
     for(int i = 1; step*i<= end; i++){
-        vector<double> coeff = coefficients(newx0,n);
+        vector<double> coeff = coefficients(newx0,n);        
         if(forward){
             newx0 = eval(coeff,step);
         }
