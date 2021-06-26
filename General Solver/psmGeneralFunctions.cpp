@@ -6,7 +6,6 @@ using namespace std;
 
 bool debug = 1;
 
-
 double PSM::nthCoefficientProduct(vector<double> x, vector<double> y, int n){
 	/* This method computes the nth coefficient of x*y, runs in O(n)
 	 */
@@ -113,13 +112,13 @@ vector<vector<double>> PSM::findSolution(vector<double> parameters, vector<doubl
 	for(int i = 1; step*i<= end; i++){
 		if(debug){
 			cout<<"Iteration "<<i<<"\n";
-			cout<<"Position "<<step*i<<"\n";
+			//cout<<"Position "<<step*i<<"\n";
 		}
 		vector<vector<double>> coeff = PSM::computeCoefficients(parameters,currentInitialConditions,n);
 		if(debug){
 			cout<<"Computed Coefficients\n";
-			for(int j = 0; j <coeff.size(); j++){
-				cout<<coeff[0][i]<<" ";
+			for(int j = 0; j <coeff[0].size(); j++){
+				cout<<coeff[0][j]<<" ";
 			}
 			cout<<"\n";
 		}

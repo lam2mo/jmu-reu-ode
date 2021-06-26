@@ -23,6 +23,10 @@ class VanDerPolEquation: public PSM{
 			 * Assuming we know the coefficients up to n
 			 * we update the n+1 coefficients
 			 */
+			 if(n+2> y[0].size()){
+				 //Add a flag like this to avoid segmentation fault
+				 return;
+			 }
 			 //Set parameters in simpler notation
 			 double a = params[0];
 			 			 
@@ -34,7 +38,7 @@ class VanDerPolEquation: public PSM{
 			 //We never need to substract 1 as this information is in the initial conditions
 			 
 			 //First equation
-			 y[0][n+2] = (-a*y[1][n]*y[2][n]-y[0][n])/(n+2);
+			 y[0][n+2] = (-a*nthCoefficientProduct(y[1],y[2],n)-y[0][n])/((n+1)*(n+2));
 			 
 			 //Update rest of values
 			 y[2][n+1] = (n+2)*y[0][n+2];			
@@ -46,8 +50,8 @@ class VanDerPolEquation: public PSM{
 int main(){
 
 	VanDerPolEquation VanDerPol;
-	double step = .1;
-	vector<double> params = {1};
+	double step = .05;
+	vector<double> params = {0};
 	vector<double> initialConditions = {1,0,0};
 	double end = .5;
 	int n = 10;
