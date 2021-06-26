@@ -14,7 +14,7 @@ ofstream out;
 class FlameEquation: public PSM{
 	public:
 	
-		void updateNthCoefficient(vector<double> params, vector<vector<double>> &y, int n){
+		void updateNthCoefficient(const vector<double>& params, vector<vector<double>> &y, int n){
 			/*We have the equation x' = x^2-x^3
 			 * We rewrite as the system:
 			 * y0' = y1 - y1 y0

@@ -11,16 +11,16 @@ class PSM{
 			vector<vector<double>> solutions;		
 		};
 		
-		double nthCoefficientProduct(vector<double>, vector<double>, int );
-		double eval(vector<double>, double);
-		vector<double> evaluateAll(vector<vector<double>>, double);
-		vector<double> calculateDerivative(vector<double>);
+		double nthCoefficientProduct(const vector<double>&, const vector<double>&, int );
+		double eval(const vector<double>&, double);
+		vector<double> evaluateAll(const vector<vector<double>>&, double);
+		vector<double> calculateDerivative(const vector<double>&);
 		
-		vector<vector<double>> computeCoefficients(vector<double>,vector<double>,int);
+		vector<vector<double>> computeCoefficients(const vector<double>&, const vector<double>&,int);
 		
 		
-		virtual Solution findSolution(vector<double>, vector<double> ,double ,double ,int , bool);
-		virtual void updateNthCoefficient(vector<double> parameters, vector<vector<double>> &y, int n){};
+		virtual Solution findSolution(const vector<double>&, const vector<double>&, double, double, int, bool);
+		virtual void updateNthCoefficient(const vector<double> &parameters, vector<vector<double>> &y, int n){};
 		
 
 

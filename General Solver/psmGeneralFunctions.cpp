@@ -6,7 +6,7 @@ using namespace std;
 
 bool debug = 0;
 
-double PSM::nthCoefficientProduct(vector<double> x, vector<double> y, int n){
+double PSM::nthCoefficientProduct(const vector<double> &x, const vector<double> &y, int n){
 	/* This method computes the nth coefficient of x*y, runs in O(n)
 	 */
 	double sum = 0;
@@ -16,7 +16,7 @@ double PSM::nthCoefficientProduct(vector<double> x, vector<double> y, int n){
 	return sum;
 }
 
-double PSM::eval(vector<double> coeff, double x){
+double PSM::eval(const vector<double> &coeff, double x){
 	/* Evaluates a Polynomial given its coefficients
 	 * Inputs:
 	 * coeff: coefficients of the polynomial to be evaluated in increasing order
@@ -33,7 +33,7 @@ double PSM::eval(vector<double> coeff, double x){
 	return val;
 }
 
-vector<double> PSM::evaluateAll(vector<vector<double>> coeff, double x){
+vector<double> PSM::evaluateAll(const vector<vector<double>> &coeff, double x){
 	/* Evaluates a set of polynomials at x
 	 */
 	int n = coeff.size();
@@ -44,7 +44,7 @@ vector<double> PSM::evaluateAll(vector<vector<double>> coeff, double x){
 	return sol;
 }
 
-vector<double> PSM::calculateDerivative(vector<double> f){
+vector<double> PSM::calculateDerivative(const vector<double> &f){
 	/*This method calculates the derivative of a polynomial*/
 	vector<double> deriv(f.size()-1,0);
 	for(int i = 0; i< deriv.size(); i++){
@@ -56,7 +56,7 @@ vector<double> PSM::calculateDerivative(vector<double> f){
 
 
 //nn means degree
-vector<vector<double>> PSM::computeCoefficients(vector<double> parameters, vector<double> initialConditions, int nn){
+vector<vector<double>> PSM::computeCoefficients(const vector<double> &parameters, const vector<double> &initialConditions, int nn){
 	/* Inputs
 	 * parameters: parameters of the equation
 	 * initialConditions: initial conditions
@@ -85,7 +85,8 @@ vector<vector<double>> PSM::computeCoefficients(vector<double> parameters, vecto
 
 
 
-PSM::Solution PSM::findSolution(vector<double> parameters, vector<double> initialConditions, double step, double end, int n, bool forward ){
+PSM::Solution PSM::findSolution(const vector<double> &parameters,
+        const vector<double> &initialConditions, double step, double end, int n, bool forward){
 	/*This function is the general PSM  solver
 	 * Input:
 	 * parameters: vector of parameters of the ODE
