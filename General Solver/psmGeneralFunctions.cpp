@@ -4,7 +4,7 @@
 #include <iostream>
 using namespace std;
 
-bool debug = 1;
+bool debug = 0;
 
 double PSM::nthCoefficientProduct(vector<double> x, vector<double> y, int n){
 	/* This method computes the nth coefficient of x*y, runs in O(n)

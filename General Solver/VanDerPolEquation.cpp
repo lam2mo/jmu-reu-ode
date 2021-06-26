@@ -9,6 +9,7 @@
 
 using namespace std;
 
+ofstream out;
 
 class VanDerPolEquation: public PSM{
 	public:
@@ -42,6 +43,18 @@ class VanDerPolEquation: public PSM{
 			 
 			 //Update rest of values
 			 y[2][n+1] = (n+2)*y[0][n+2];			
+		}
+		
+		void writeToFile(string file,vector<vector<double>> sol,double step){
+			/* Writes to the file
+			 * It receives sol, the output of findSolution
+			 */
+			 
+			out.open(file);
+			for(int i = 0; i<sol[0].size(); i++){
+				out<<setw(15)<<i*step<<setw(15)<<sol[0][i]<<setw(15)<<sol[2][i]<<"\n";
+			}
+			out.close();
 		}	
 };
 
@@ -57,10 +70,6 @@ int main(){
 	int n = 10;
 	vector<vector<double>> sol = VanDerPol.findSolution(params,initialConditions,step, end, n, 1);
 	
+	VanDerPol.writeToFile("vanDerPol.dat",sol,step);
 	
-	for(int i = 0; i*step<=end; i++){
-		cout<<setw(15)<<i*step<<setw(15)<<sol[0][i]<<setw(15)<<sol[1][i]<<setw(15)<<sol[0][i]*sol[0][i]-1<<"\n";
-	}
-	
-
 }
