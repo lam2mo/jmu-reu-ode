@@ -1,10 +1,13 @@
 #include "psmGeneralFunctions.h"
 #include <vector>
 #include <cmath>
-
+#include <iostream>
 using namespace std;
 
-double PSM::nthCoefficientProduct(vector<double>& x, vector<double>& y, int n){
+bool debug = 1;
+
+
+double PSM::nthCoefficientProduct(vector<double> x, vector<double> y, int n){
 	/* This method computes the nth coefficient of x*y, runs in O(n)
 	 */
 	double sum = 0;
@@ -66,23 +69,24 @@ vector<vector<double>> PSM::computeCoefficients(vector<double> parameters, vecto
 	 * Runs in O(n^2), memory O(n)
 	 */
      //Initial Conditions
-	
-	vector<vector<double>> coefficients(nn);
+	int k = initialConditions.size();
+	vector<vector<double>> coefficients(k,vector<double> (nn,0));
 	
 	//Add initial conditions
-	for(int i = 0; i<nn; i++){
+	for(int i = 0; i<k; i++){
 		coefficients[i][0] = initialConditions[i];
 	}
 	/*Calculate solution*/
 	for(int n = 0; n<nn-1; n++){
 		//This function has to be defined for every problem
-		PSM::updateNthCoefficient(parameters,coefficients,n);
+		updateNthCoefficient(parameters,coefficients,n);
 	}
 	return coefficients;
 }
 
-	
-vector<vector<double>> PSM::findSolution(vector<double> parameters, vector<double> initialConditions, double step, double end, int n, bool forward){
+
+
+vector<vector<double>> PSM::findSolution(vector<double> parameters, vector<double> initialConditions, double step, double end, int n, bool forward ){
 	/*This function is the general PSM  solver
 	 * Input:
 	 * parameters: vector of parameters of the ODE
@@ -100,26 +104,40 @@ vector<vector<double>> PSM::findSolution(vector<double> parameters, vector<doubl
 		solution[i].push_back(initialConditions[i]);
 		currentInitialConditions[i] = initialConditions[i];
 	}
+	
+	if(debug){
+		cout<<"Set Initial Conditions\n";
+	}
 
 	//Start Stepping
 	for(int i = 1; step*i<= end; i++){
+		if(debug){
+			cout<<"Iteration "<<i<<"\n";
+			cout<<"Position "<<step*i<<"\n";
+		}
 		vector<vector<double>> coeff = PSM::computeCoefficients(parameters,currentInitialConditions,n);
+		if(debug){
+			cout<<"Computed Coefficients\n";
+			for(int j = 0; j <coeff.size(); j++){
+				cout<<coeff[0][i]<<" ";
+			}
+			cout<<"\n";
+		}
 		if(forward){
 			currentInitialConditions = PSM::evaluateAll(coeff,step);
 		}
 		else{
 			currentInitialConditions = PSM::evaluateAll(coeff,-step);
 		}
+		if(debug){
+			cout<<"Computed new initial conditions\n";
+		}
 		for(int j = 0; j<numberOfEquations; j++){
-			solution[i].push_back(currentInitialConditions[i]);
+			solution[j].push_back(currentInitialConditions[j]);
 		}	
 	}
 	return solution;
 }
 
-int main(){
-	
-}
 
-	
 
