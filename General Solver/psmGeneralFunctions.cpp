@@ -85,7 +85,7 @@ vector<vector<double>> PSM::computeCoefficients(vector<double> parameters, vecto
 
 
 
-vector<vector<double>> PSM::findSolution(vector<double> parameters, vector<double> initialConditions, double step, double end, int n, bool forward ){
+PSM::Solution PSM::findSolution(vector<double> parameters, vector<double> initialConditions, double step, double end, int n, bool forward ){
 	/*This function is the general PSM  solver
 	 * Input:
 	 * parameters: vector of parameters of the ODE
@@ -96,7 +96,8 @@ vector<vector<double>> PSM::findSolution(vector<double> parameters, vector<doubl
 	 */
 	int numberOfEquations = initialConditions.size();
 	vector<vector<double>> solution(numberOfEquations); //We might want to include any auxiliary variables in here as well
-	
+	vector<double> steps;
+	steps.push_back(0);
 	//Initialize initial conditions
 	vector<double> currentInitialConditions(numberOfEquations);
 	for(int i = 0; i<numberOfEquations; i++){
@@ -110,6 +111,7 @@ vector<vector<double>> PSM::findSolution(vector<double> parameters, vector<doubl
 
 	//Start Stepping
 	for(int i = 1; step*i<= end; i++){
+		steps.push_back(step*i);
 		if(debug){
 			cout<<"Iteration "<<i<<"\n";
 			//cout<<"Position "<<step*i<<"\n";
@@ -135,7 +137,8 @@ vector<vector<double>> PSM::findSolution(vector<double> parameters, vector<doubl
 			solution[j].push_back(currentInitialConditions[j]);
 		}	
 	}
-	return solution;
+	Solution sol {steps, solution};
+	return sol;
 }
 
 

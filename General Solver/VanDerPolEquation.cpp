@@ -45,14 +45,14 @@ class VanDerPolEquation: public PSM{
 			 y[2][n+1] = (n+2)*y[0][n+2];			
 		}
 		
-		void writeToFile(string file,vector<vector<double>> sol,double step){
+		void writeToFile(string file,Solution sol1){
 			/* Writes to the file
-			 * It receives sol, the output of findSolution
+			 * It receives sol1, the output of findSolution
 			 */
-			 
+
 			out.open(file);
-			for(int i = 0; i<sol[0].size(); i++){
-				out<<setw(15)<<i*step<<setw(15)<<sol[0][i]<<setw(15)<<sol[2][i]<<"\n";
+			for(int i = 0; i<sol1.solutions[0].size(); i++){
+				out<<setw(15)<<sol1.steps[i]<<setw(15)<<sol1.solutions[0][i]<<setw(15)<<sol1.solutions[2][i]<<"\n";
 			}
 			out.close();
 		}	
@@ -63,13 +63,13 @@ class VanDerPolEquation: public PSM{
 int main(){
 
 	VanDerPolEquation VanDerPol;
-	double step = .05;
+	double step = .1;
 	vector<double> params = {0};
 	vector<double> initialConditions = {1,0,0};
-	double end = .5;
+	double end = 4;
 	int n = 10;
-	vector<vector<double>> sol = VanDerPol.findSolution(params,initialConditions,step, end, n, 1);
+	PSM::Solution sol = VanDerPol.findSolution(params,initialConditions,step, end, n, 1);
 	
-	VanDerPol.writeToFile("vanDerPol.dat",sol,step);
+	VanDerPol.writeToFile("vanDerPol.dat",sol);
 	
 }

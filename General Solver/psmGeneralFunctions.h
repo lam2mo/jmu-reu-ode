@@ -6,6 +6,11 @@ using namespace std;
 
 class PSM{
 	public:
+		struct Solution{
+			vector<double> steps;
+			vector<vector<double>> solutions;		
+		};
+		
 		double nthCoefficientProduct(vector<double>, vector<double>, int );
 		double eval(vector<double>, double);
 		vector<double> evaluateAll(vector<vector<double>>, double);
@@ -14,7 +19,10 @@ class PSM{
 		vector<vector<double>> computeCoefficients(vector<double>,vector<double>,int);
 		
 		
-		virtual vector<vector<double>> findSolution(vector<double>, vector<double> ,double ,double ,int , bool);
+		virtual Solution findSolution(vector<double>, vector<double> ,double ,double ,int , bool);
 		virtual void updateNthCoefficient(vector<double> parameters, vector<vector<double>> &y, int n){};
+		
+
+
 };
 #endif
