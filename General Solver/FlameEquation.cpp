@@ -23,7 +23,7 @@ class FlameEquation: public PSM{
 			 * Assuming we know the coefficients up to n
 			 * we update the n+1 coefficients
 			 */
-			 if(n+1> y[0].size()){
+			 if(n+1>= y[0].size()){
 				 //Add a flag like this to avoid segmentation fault
 				 return;
 			 }

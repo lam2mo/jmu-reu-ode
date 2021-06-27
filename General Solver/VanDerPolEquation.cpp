@@ -24,7 +24,7 @@ class VanDerPolEquation: public PSM{
 			 * Assuming we know the coefficients up to n
 			 * we update the n+1 coefficients
 			 */
-			 if(n+2> y[0].size()){
+			 if(n+2>= y[0].size()){
 				 //Add a flag like this to avoid segmentation fault
 				 return;
 			 }
