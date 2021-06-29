@@ -6,6 +6,7 @@
 #include <chrono>
 #include <vector>
 #include <cmath>
+#include <string>
 
 using namespace std;
 
@@ -24,7 +25,7 @@ class VanDerPolEquation: public PSM{
 			 * Assuming we know the coefficients up to n
 			 * we update the n+1 coefficients
 			 */
-			 if(n+2>= y[0].size()){
+			 if(n+2>= (int)y[0].size()){
 				 //Add a flag like this to avoid segmentation fault
 				 return;
 			 }
@@ -51,25 +52,54 @@ class VanDerPolEquation: public PSM{
 			 */
 
 			out.open(file);
-			for(int i = 0; i<sol1.solutions[0].size(); i++){
+			for(unsigned int i = 0; i<sol1.solutions[0].size(); i++){
 				out<<setw(15)<<sol1.steps[i]<<setw(15)<<sol1.solutions[0][i]<<setw(15)<<sol1.solutions[2][i]<<"\n";
 			}
+			out.close();
+		}	
+		void writeToFile(string file,Solution sol1, Solution sol2){
+			/* Writes to the file
+			 * It receives sol1 the negative part and sol2 the positive
+			 */
+
+			out.open(file);
+			for(int i = sol1.solutions[0].size()-1; i>=0 ;i--){
+				out<<setw(15)<<sol1.steps[i]<<setw(15)<<sol1.solutions[0][i]<<setw(15)<<sol1.solutions[2][i]<<"\n";
+			}
+			for(unsigned int i = 1; i<sol2.solutions[0].size(); i++){
+				out<<setw(15)<<sol2.steps[i]<<setw(15)<<sol2.solutions[0][i]<<setw(15)<<sol2.solutions[2][i]<<"\n";
+			}
+				
 			out.close();
 		}	
 };
 
 
 
-int main(){
+int main(int argc, const char* argv[]){
+	
+	if(argc != 6){
+        cout << "Usage: " << argv[0] << " <a> <x0> <px0> <tn> <dt> " << endl;
+        return EXIT_FAILURE;
+	}
+	double a = stod(argv[1],NULL);
+	double x0 = stod(argv[2],NULL);
+	double px0 = stod(argv[3],NULL);
+	double end = stod(argv[4],NULL);
+	double step = stod(argv[5],NULL);
 
 	VanDerPolEquation VanDerPol;
-	double step = .1;
-	vector<double> params = {0};
-	vector<double> initialConditions = {1,0,0};
-	double end = 4;
+	vector<double> params = {a};
+	vector<double> initialConditions = {x0,px0,x0*x0-1};
 	int n = 10;
-	PSM::Solution sol = VanDerPol.findSolution(params,initialConditions,step, end, n, 1);
+	PSM::Solution sol2 = VanDerPol.findSolution(params,initialConditions,step, end, n, 1);
+	PSM::Solution sol1 = VanDerPol.findSolution(params,initialConditions,step, end, n, 0);
 	
-	VanDerPol.writeToFile("vanDerPol.dat",sol);
+	PSM::Solution sol4 = VanDerPol.findSolutionAdaptive(params,initialConditions,end,1);
+	PSM::Solution sol3 = VanDerPol.findSolutionAdaptive(params,initialConditions,end,0);
 	
+	VanDerPol.writeToFile("vanDerPol.dat",sol1,sol2);
+	VanDerPol.writeToFile("vanDerPolAdaptive.dat",sol3,sol4);
+
+	return 0;
 }
