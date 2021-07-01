@@ -95,11 +95,19 @@ int main(int argc, const char* argv[]){
 	PSM::Solution sol2 = VanDerPol.findSolution(params,initialConditions,step, end, n, 1);
 	PSM::Solution sol1 = VanDerPol.findSolution(params,initialConditions,step, end, n, 0);
 	
+		double eps = .000001;
+	PSM::Solution sol6 = VanDerPol.findAdaptiveSolutionTruncation(params,initialConditions,end,1,eps);
+	PSM::Solution sol5 = VanDerPol.findAdaptiveSolutionTruncation(params,initialConditions,end,0,eps);
+	
+
 	PSM::Solution sol4 = VanDerPol.findSolutionAdaptive(params,initialConditions,end,1);
 	PSM::Solution sol3 = VanDerPol.findSolutionAdaptive(params,initialConditions,end,0);
-	
+
+
 	VanDerPol.writeToFile("vanDerPol.dat",sol1,sol2);
 	VanDerPol.writeToFile("vanDerPolAdaptive.dat",sol3,sol4);
+	VanDerPol.writeToFile("vanDerPolAdaptive2.dat",sol5,sol6);
+
 
 	return 0;
 }

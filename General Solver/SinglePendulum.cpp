@@ -11,7 +11,7 @@ using namespace std;
 
 ofstream out;
 
-class DoublePendulum: public PSM{
+class SinglePendulum: public PSM{
 	public:
 	
 		void updateNthCoefficient(const vector<double> &params, vector<vector<double>> &y, int n){
@@ -82,7 +82,7 @@ int main(int argc, const char* argv[]){
 	double end = stod(argv[3],NULL);
 	int n = stod(argv[4],NULL);
 
-	DoublePendulum pendulum;
+	SinglePendulum pendulum;
 	vector<double> params = {0};
 	vector<double> initialConditions = {x0, sin(x0),cos(x0)};
 	PSM::Solution sol2 = pendulum.findSolution(params,initialConditions,step, end, n, 1);
@@ -91,8 +91,14 @@ int main(int argc, const char* argv[]){
 	PSM::Solution sol4 = pendulum.findSolutionAdaptive(params,initialConditions,end,1);
 	PSM::Solution sol3 = pendulum.findSolutionAdaptive(params,initialConditions,end,0);
 	
-	pendulum.writeToFile("doublePendulum.dat",sol1,sol2);
-	pendulum.writeToFile("doublePendulumAdaptive.dat",sol3,sol4);
+	double eps = .000001;
+	PSM::Solution sol6 = pendulum.findAdaptiveSolutionTruncation(params,initialConditions,end,1,eps);
+	PSM::Solution sol5 = pendulum.findAdaptiveSolutionTruncation(params,initialConditions,end,0,eps);
+	
+
+	pendulum.writeToFile("singlePendulum.dat",sol1,sol2);
+	pendulum.writeToFile("singlePendulumAdaptive.dat",sol3,sol4);
+	pendulum.writeToFile("singlePendulumAdaptive2.dat",sol5,sol6);
 
 	
 }

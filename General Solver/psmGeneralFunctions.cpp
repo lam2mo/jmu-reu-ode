@@ -156,7 +156,6 @@ double PSM::findRadiusOfConvergence(const vector<double> &a,bool EvenRadius){
 
   
 double PSM::approximateRadiusOfConvergence(const vector<double> &coeff){
-	int n = coeff.size();
 	return max(findRadiusOfConvergence(coeff,1),findRadiusOfConvergence(coeff,0));	
 
 }  
@@ -185,33 +184,15 @@ double PSM::findMaximumTimeStep(int k,double eps){
 	return b;
 }
 
-vector<vector<double>> PSM::computeCoefficientsAdaptive(const vector<double> &parameters, const vector<double> &initialConditions){
-	/* Inputs
-	 * parameters: parameters of the equation
-	 * initialConditions: initial conditions
-	 * nn : order of the polynomial approximation
+/*As for now I'll just have this as a global variable
+I should change it later on
+*/
 
-	 * Output:
-	 * coefficients of the nth polynomial approximation in increasing order
-	 * 
-	 * Runs in O(n^2), memory O(n)
-	 */
-     //Initial Conditions
-    int maxDegree = 25; //This is arbitrary as of right now 
-	int k = initialConditions.size();
-	vector<vector<double>> coefficients(k,vector<double> (maxDegree,0));
-	
-	//Add initial conditions
-	for(int i = 0; i<k; i++){
-		coefficients[i][0] = initialConditions[i];
-	}
-	/*Calculate solution*/
-	for(int n = 0; n<maxDegree-1; n++){
-		//This function has to be defined for every problem
-		updateNthCoefficient(parameters,coefficients,n);
-	}
-	return coefficients;
-}
+int maxDegree = 25;
+
+//The following are 3 adaptive methods
+
+
 
 PSM::Solution PSM::findSolutionAdaptive(const vector<double> &parameters,
         const vector<double> &initialConditions, double end, bool forward){
@@ -231,19 +212,8 @@ PSM::Solution PSM::findSolutionAdaptive(const vector<double> &parameters,
 	double cur = 0;
 	double step = 0;
 	while(cur< end){
-		vector<vector<double>> coeff = PSM::computeCoefficientsAdaptive(parameters,currentInitialConditions);
+		vector<vector<double>> coeff = PSM::computeCoefficients(parameters,currentInitialConditions,maxDegree);
 		step = approximateRadiusOfConvergence(coeff)/3.0; //This is an estimation to the radius of convergence
-		if(debug){
-			cout<<"Coeficientes\n[";
-			for(int i = 0; i<coeff[0].size(); i++){
-				cout<<coeff[0][i]<<",";
-				//cout<<pow(fabs(coeff[0][i]),1.0/i)<<" ";
-			}
-			cout<<"]\n";
-			
-			cout<<"\n";
-			cout<<"Step : "<<1/(2*step)<<" "<<step<<"\n";
-		}
 		cur+= step;
 		if(forward){
 			steps.push_back(cur);
@@ -261,6 +231,45 @@ PSM::Solution PSM::findSolutionAdaptive(const vector<double> &parameters,
 	return sol;				
 }
 
+
+PSM::Solution PSM::findAdaptiveSolutionTruncation(const vector<double> &parameters,
+        const vector<double> &initialConditions, double end, bool forward,double eps){
+	
+	int numberOfEquations = initialConditions.size();
+	vector<vector<double>> solution(numberOfEquations); //We might want to include any auxiliary variables in here as well
+	vector<double> steps;
+	steps.push_back(0);
+	//Initialize initial conditions
+	vector<double> currentInitialConditions(numberOfEquations);
+	for(int i = 0; i<numberOfEquations; i++){
+		solution[i].push_back(initialConditions[i]);
+		currentInitialConditions[i] = initialConditions[i];
+	}
+	
+	//Start Stepping
+	double cur = 0;
+	double step = 0;
+	while(cur< end){
+		vector<vector<double>> coeff = PSM::computeCoefficients(parameters,currentInitialConditions,maxDegree);
+		double lastNonZeroCoefficient = max(fabs(coeff[0][maxDegree-1]),fabs(coeff[0][maxDegree-2]));
+		step = pow(fabs(eps/(2*lastNonZeroCoefficient)),1.0/(maxDegree-1)); //This is an estimation to the radius of convergence
+		cur+= step;
+		if(forward){
+			steps.push_back(cur);
+			currentInitialConditions = PSM::evaluateAll(coeff,step);
+		}
+		else{
+			steps.push_back(-cur);
+			currentInitialConditions = PSM::evaluateAll(coeff,-step);
+		}
+		for(int j = 0; j<numberOfEquations; j++){
+			solution[j].push_back(currentInitialConditions[j]);
+		}	
+	}
+	Solution sol {steps, solution};
+	return sol;		
+	
+}
 
 
 

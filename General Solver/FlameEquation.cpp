@@ -85,8 +85,16 @@ int main(int argc, const char* argv[]){
 	PSM::Solution sol3 = flame.findSolutionAdaptive(params,initialConditions,end,1);
 	PSM::Solution sol4 = flame.findSolutionAdaptive(params,initialConditions,end,0);
 	
+	double eps = .000001;
+	PSM::Solution sol6 = flame.findAdaptiveSolutionTruncation(params,initialConditions,end,1,eps);
+	PSM::Solution sol5 = flame.findAdaptiveSolutionTruncation(params,initialConditions,end,0,eps);
+	
+
+	
 	flame.writeToFile("flame.dat",sol1,sol2);
-	flame.writeToFile("flameAdaptive.dat",sol4,sol3);
+	flame.writeToFile("flameAdaptive.dat",sol3,sol4);
+	flame.writeToFile("flameAdaptive2.dat",sol5,sol6);
+
 
 	
 }
