@@ -79,8 +79,8 @@ class VanDerPolEquation: public PSM{
 
 int main(int argc, const char* argv[]){
 	
-	if(argc != 6){
-        cout << "Usage: " << argv[0] << " <a> <x0> <px0> <tn> <dt> " << endl;
+	if(argc != 7){
+        cout << "Usage: " << argv[0] << " <a> <x0> <px0> <tn> <dt> <n>" << endl;
         return EXIT_FAILURE;
 	}
 	double a = stod(argv[1],NULL);
@@ -88,18 +88,17 @@ int main(int argc, const char* argv[]){
 	double px0 = stod(argv[3],NULL);
 	double end = stod(argv[4],NULL);
 	double step = stod(argv[5],NULL);
-
+	int n = stod(argv[6],NULL);
 	VanDerPolEquation VanDerPol;
 	vector<double> params = {a};
 	vector<double> initialConditions = {x0,px0,x0*x0-1};
 	
-	int n = 10;
-	
+
 	
 	double eps = .000001;
 	
 	out.open("timeComparisonVanDerPol.dat");
-	
+	/*
 	out<<"Van der Pol Equation \n";
 	out<<"----------------------\n";
 	out<<"Initial condition "<<x0<<"\n";
@@ -109,15 +108,18 @@ int main(int argc, const char* argv[]){
 	out<<"Fixed Step "<<step<<"\n";
 	out<<"Interval "<<end<<"\n";
 	out<<setw(15)<<"Method"<<setw(15)<<"Time"<<setw(15)<<"Steps\n";
-	VanDerPol.setMaxDegree(n);
-	auto start = high_resolution_clock::now();
+	*/
 	
+	VanDerPol.setMaxDegree(n);	
+	
+	auto start = high_resolution_clock::now();
+	/*
 	PSM::Solution sol2 = VanDerPol.findSolution(params,initialConditions,step, end, n, 1);
 	PSM::Solution sol1 = VanDerPol.findSolution(params,initialConditions,step, end, n, 0);
-	
+	*/
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
-	out<<setw(15)<<"Fixed"<<setw(15)<< duration.count()<<setw(15)<<(sol2.steps.size()+sol1.steps.size()-1)<<"\n";
+	//out<<setw(15)<<"Fixed"<<setw(15)<< duration.count()<<setw(15)<<(sol2.steps.size()+sol1.steps.size()-1)<<"\n";
 	
 
 
@@ -128,8 +130,8 @@ int main(int argc, const char* argv[]){
 
 	stop = high_resolution_clock::now();
 	duration = duration_cast<microseconds>(stop - start);
-	out<<setw(15)<<"Adaptive1"<<setw(15)<< duration.count()<<setw(15)<<(sol3.steps.size()+sol4.steps.size()-1)<<"\n";
-	
+	out<<"Adaptive1"<<" "<< n<<" "<<duration.count()<<" "<<(sol3.steps.size()+sol4.steps.size()-1)<<"\n";
+
 	start = high_resolution_clock::now();
 
 	PSM::Solution sol6 = VanDerPol.findAdaptiveSolutionTruncation(params,initialConditions,end,1,eps);
@@ -137,7 +139,7 @@ int main(int argc, const char* argv[]){
 	
 	stop = high_resolution_clock::now();
 	duration = duration_cast<microseconds>(stop - start);
-	out<<setw(15)<<"Adaptive2"<<setw(15)<< duration.count()<<setw(15)<<(sol5.steps.size()+sol6.steps.size()-1)<<"\n";
+	out<<"Adaptive2"<<" "<< n<<" "<<duration.count()<<" "<<(sol5.steps.size()+sol6.steps.size()-1)<<"\n";
 	out.close();
 	
 /*
@@ -148,12 +150,12 @@ int main(int argc, const char* argv[]){
 	duration = duration_cast<microseconds>(stop - start);
 	out<<setw(15)<<"Adaptive3"<<setw(15)<< duration.count()<<setw(15)<<(sol8.steps.size()+sol7.steps.size()-1)<<"\n";
 	out.close();
-*/
+
 	VanDerPol.writeToFile("vanDerPol.dat",sol1,sol2);
 	VanDerPol.writeToFile("vanDerPolAdaptive.dat",sol3,sol4);
 	VanDerPol.writeToFile("vanDerPolAdaptive2.dat",sol5,sol6);
 	//VanDerPol.writeToFile("vanDerPolAdaptive3.dat",sol7,sol8);
-
+*/
 
 
 	return 0;

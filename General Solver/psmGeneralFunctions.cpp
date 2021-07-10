@@ -206,6 +206,7 @@ PSM::Solution PSM::findSolutionAdaptive(const vector<double> &parameters,
 	while(cur< end){
 		vector<vector<double>> coeff = PSM::computeCoefficients(parameters,currentInitialConditions,maxDegree);
 		step = pow(eps,1.0/(coeff[0].size()-1))*approximateRadiusOfConvergence(coeff); //This is an estimation to the radius of convergence
+		step = pow(eps,1.0/(coeff[0].size()-1))*approximateRadiusOfConvergence(coeff); //This is an estimation to the radius of convergence
 		cur+= step;
 		if(forward){
 			steps.push_back(cur);
@@ -283,10 +284,15 @@ PSM::Solution PSM::findAdaptiveSolutionJorbaAndZou(const vector<double> &paramet
 	double cur = 0;
 	double step = 0;
 	while(cur< end){
-		double A = 1;
-		int degree = ceil(-log(eps/A)/2.0 -1);
+		int degree = ceil(-log(eps)/2.0 +1);
 		vector<vector<double>> coeff = PSM::computeCoefficients(parameters,currentInitialConditions,degree);
-		step = approximateRadiusOfConvergence(coeff)/exp(2.0);//This is an estimation to the radius of convergence
+		double maxRadius = -1;
+		for(int i = 1; i< (int)coeff.size();i++){
+			maxRadius = max(maxRadius, abs(coeff[0][i]));
+		}
+		step = pow(abs(coeff[0][degree-2]),1.0/(degree-2));
+		step = max(pow(abs(coeff[0][degree-1]),1.0/(degree-1)),step);
+		step = 1.0/step;
 		cur+= step;
 		if(forward){
 			steps.push_back(cur);

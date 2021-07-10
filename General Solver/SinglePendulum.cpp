@@ -86,13 +86,13 @@ int main(int argc, const char* argv[]){
 
 	SinglePendulum pendulum;
 	vector<double> params = {0};
-	vector<double> initialConditions = {x0, sin(x0),cos(x0)};
+	vector<double> initialConditions = {x0, sin(x0),cos(x0)};//Initial conditions for y0,y1,y2
 
 	
 	double eps = .000001;
 	
-	out.open("timeComparisonpendulum.dat");
-	
+	out.open("timeComparisonPendulum.dat");
+	/*
 	out<<"Single Pendulum Equation \n";
 	out<<"----------------------\n";
 	out<<"Initial condition "<<x0<<"\n";
@@ -101,26 +101,27 @@ int main(int argc, const char* argv[]){
 	out<<"Interval "<<end<<"\n";
 	out<<"----------------------\n";
 	out<<setw(15)<<"Method"<<setw(15)<<"Time"<<setw(15)<<"Steps\n";
+	*/
 	pendulum.setMaxDegree(n);
 	auto start = high_resolution_clock::now();
-	
+	/*
 	PSM::Solution sol2 = pendulum.findSolution(params,initialConditions,step, end, n, 1);
 	PSM::Solution sol1 = pendulum.findSolution(params,initialConditions,step, end, n, 0);
-	
+	*/
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
-	out<<setw(15)<<"Fixed"<<setw(15)<< duration.count()<<setw(15)<<(sol2.steps.size()+sol1.steps.size()-1)<<"\n";
+	//out<<setw(15)<<"Fixed"<<setw(15)<< duration.count()<<setw(15)<<(sol2.steps.size()+sol1.steps.size()-1)<<"\n";
 	
 
 
 	start = high_resolution_clock::now();
-		
+	
 	PSM::Solution sol4 = pendulum.findSolutionAdaptive(params,initialConditions,end,1,eps);
 	PSM::Solution sol3 = pendulum.findSolutionAdaptive(params,initialConditions,end,0,eps);
-
+	
 	stop = high_resolution_clock::now();
 	duration = duration_cast<microseconds>(stop - start);
-	out<<setw(15)<<"Adaptive1"<<setw(15)<< duration.count()<<setw(15)<<(sol3.steps.size()+sol4.steps.size()-1)<<"\n";
+	out<<"Adaptive1"<<" "<< n<<" "<<duration.count()<<" "<<(sol3.steps.size()+sol4.steps.size()-1)<<"\n";
 	
 	start = high_resolution_clock::now();
 
@@ -129,7 +130,7 @@ int main(int argc, const char* argv[]){
 	
 	stop = high_resolution_clock::now();
 	duration = duration_cast<microseconds>(stop - start);
-	out<<setw(15)<<"Adaptive2"<<setw(15)<< duration.count()<<setw(15)<<(sol5.steps.size()+sol6.steps.size()-1)<<"\n";
+	out<<"Adaptive2"<<" "<< n<<" "<<duration.count()<<" "<<(sol5.steps.size()+sol6.steps.size()-1)<<"\n";
 	
 
   	start = high_resolution_clock::now();
@@ -138,14 +139,15 @@ int main(int argc, const char* argv[]){
 	
 	stop = high_resolution_clock::now();
 	duration = duration_cast<microseconds>(stop - start);
-	out<<setw(15)<<"Adaptive3"<<setw(15)<< duration.count()<<setw(15)<<(sol8.steps.size()+sol7.steps.size()-1)<<"\n";
+	out<<"Adaptive3"<<" "<< n<<" "<<duration.count()<<" "<<(sol7.steps.size()+sol8.steps.size()-1)<<"\n";
 	
 	out.close();
-	 
+	
+	/*
 	pendulum.writeToFile("singlePendulum.dat",sol1,sol2);
 	pendulum.writeToFile("singlePendulumAdaptive.dat",sol3,sol4);
 	pendulum.writeToFile("singlePendulumAdaptive2.dat",sol5,sol6);
 	pendulum.writeToFile("singlePendulumAdaptive3.dat",sol7,sol8);
-
+	*/
 	
 }
