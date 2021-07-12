@@ -1,6 +1,9 @@
 #!/bin/bash
 
 rm FlameAllTests.dat
+rm VanDerPolAllTests.dat
+rm PendulumAllTests.dat
+
 for((n = 0; i<1; i++))
 do
 	for time in {100..100..5}

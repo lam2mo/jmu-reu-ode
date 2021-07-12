@@ -140,17 +140,16 @@ int main(int argc, const char* argv[]){
 	stop = high_resolution_clock::now();
 	duration = duration_cast<microseconds>(stop - start);
 	out<<"Adaptive2"<<" "<< n<<" "<<duration.count()<<" "<<(sol5.steps.size()+sol6.steps.size()-1)<<"\n";
-	out.close();
 	
-/*
+
   	start = high_resolution_clock::now();
 	PSM::Solution sol8 = VanDerPol.findAdaptiveSolutionJorbaAndZou(params,initialConditions,end,1,eps);
 	PSM::Solution sol7 = VanDerPol.findAdaptiveSolutionJorbaAndZou(params,initialConditions,end,0,eps);
 	stop = high_resolution_clock::now();
 	duration = duration_cast<microseconds>(stop - start);
-	out<<setw(15)<<"Adaptive3"<<setw(15)<< duration.count()<<setw(15)<<(sol8.steps.size()+sol7.steps.size()-1)<<"\n";
+	out<<"Adaptive3"<<" "<< n<<" "<<duration.count()<<" "<<(sol8.steps.size()+sol7.steps.size()-1)<<"\n";
 	out.close();
-
+/*
 	VanDerPol.writeToFile("vanDerPol.dat",sol1,sol2);
 	VanDerPol.writeToFile("vanDerPolAdaptive.dat",sol3,sol4);
 	VanDerPol.writeToFile("vanDerPolAdaptive2.dat",sol5,sol6);

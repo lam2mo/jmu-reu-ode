@@ -139,8 +139,8 @@ PSM::Solution PSM::findSolution(const vector<double> &parameters,
 
 
 double PSM::findRadiusOfConvergence(const vector<double> &a,bool EvenRadius){
-	// This method returns 1/r, where r is an approximation to the radius of convergence
-	// returns -1 if n<8
+	// This method returns 1/r, where r is an approximation to the radius of convergence using Aitkens acceleration
+	// returns the root test radius if n < 8
 	int n = a.size();
 	if(n<8){
 		double lastNonZeroCoefficient = max(fabs(a[n-1]),fabs(a[n-2]));
@@ -177,9 +177,6 @@ double PSM::approximateRadiusOfConvergence(const vector<vector<double>> &coeff){
 	return 1.0/invR;
 }  
 
-/*As for now I'll just have this as a global variable
-I should change it later on
-*/
 
 
 //The following are 3 adaptive methods
@@ -205,8 +202,7 @@ PSM::Solution PSM::findSolutionAdaptive(const vector<double> &parameters,
 	double step = 0;
 	while(cur< end){
 		vector<vector<double>> coeff = PSM::computeCoefficients(parameters,currentInitialConditions,maxDegree);
-		step = pow(eps,1.0/(coeff[0].size()-1))*approximateRadiusOfConvergence(coeff); //This is an estimation to the radius of convergence
-		step = pow(eps,1.0/(coeff[0].size()-1))*approximateRadiusOfConvergence(coeff); //This is an estimation to the radius of convergence
+		step = pow(eps,1.0/(coeff[0].size()-1))/approximateRadiusOfConvergence(coeff[0]); //This is an estimation to the radius of convergence
 		cur+= step;
 		if(forward){
 			steps.push_back(cur);
@@ -283,16 +279,17 @@ PSM::Solution PSM::findAdaptiveSolutionJorbaAndZou(const vector<double> &paramet
 	//Start Stepping
 	double cur = 0;
 	double step = 0;
+	double infNorm = 1;
+	
+	int degree = ceil(-log(eps)/2.0 +1);
 	while(cur< end){
-		int degree = ceil(-log(eps)/2.0 +1);
 		vector<vector<double>> coeff = PSM::computeCoefficients(parameters,currentInitialConditions,degree);
-		double maxRadius = -1;
-		for(int i = 1; i< (int)coeff.size();i++){
-			maxRadius = max(maxRadius, abs(coeff[0][i]));
-		}
-		step = pow(abs(coeff[0][degree-2]),1.0/(degree-2));
-		step = max(pow(abs(coeff[0][degree-1]),1.0/(degree-1)),step);
+
+		step = pow(abs(coeff[0][degree-2]/infNorm),1.0/(degree-2));
+		step = max(pow(abs(coeff[0][degree-1]/infNorm),1.0/(degree-1)),step);
+		
 		step = 1.0/step;
+		step = step/exp(2)*exp(-.7/(degree-1));
 		cur+= step;
 		if(forward){
 			steps.push_back(cur);
@@ -304,6 +301,10 @@ PSM::Solution PSM::findAdaptiveSolutionJorbaAndZou(const vector<double> &paramet
 		}
 		for(int j = 0; j<numberOfEquations; j++){
 			solution[j].push_back(currentInitialConditions[j]);
+		}
+		if(cur != 0){
+			//This part needs to be changed for systems of differential equations, as we should ignore auxiliary variables when calculating the max
+			infNorm = max(infNorm,abs(currentInitialConditions[0]));
 		}	
 	}
 	Solution sol {steps, solution};
