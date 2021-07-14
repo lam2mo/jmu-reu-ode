@@ -9,6 +9,7 @@ do
 	for time in {100..100..5}
 	do
 		for degree in {15..80}
+		#Lower degrees get stuck
 		do
 			echo "$degree"
 			./FlameEquation .5 "$degree" "$time" 

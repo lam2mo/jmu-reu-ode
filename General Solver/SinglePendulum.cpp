@@ -15,7 +15,6 @@ ofstream out;
 
 class SinglePendulum: public PSM{
 	public:
-	
 		void updateNthCoefficient(const vector<double> &params, vector<vector<double>> &y, int n){
 			/*We have the equation x' = sin(x)
 			 * We rewrite as the system:

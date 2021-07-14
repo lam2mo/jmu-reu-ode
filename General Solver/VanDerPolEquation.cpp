@@ -15,7 +15,6 @@ ofstream out;
 
 class VanDerPolEquation: public PSM{
 	public:
-	
 		void updateNthCoefficient(const vector<double> &params, vector<vector<double>> &y, int n){
 			/*We have the equation x''+a(x^2-1)x'+x = 0
 			 * We rewrite as the system:
