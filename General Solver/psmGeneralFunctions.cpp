@@ -210,8 +210,11 @@ PSM::Solution PSM::findAdaptiveSolutionTruncation(const vector<double> &paramete
 	double step = 0;
 	while(cur< end){
 		vector<vector<double>> coeff = PSM::computeCoefficients(parameters,currentInitialConditions,maxDegree);
-		double lastNonZeroCoefficient = max(fabs(coeff[0][maxDegree-1]),fabs(coeff[0][maxDegree-2]));
-		step = pow(fabs(eps/(2*lastNonZeroCoefficient)),1.0/(maxDegree-1)); //This is an estimation to the radius of convergence
+		
+		step = pow(abs(2*coeff[0][maxDegree-2]/eps),1.0/(maxDegree-2));
+		step = max(pow(abs(2*coeff[0][maxDegree-1]/eps),1.0/(maxDegree-1)),step);
+		step = 1.0/step;
+		
 		cur+= step;
 		if(forward){
 			steps.push_back(cur);

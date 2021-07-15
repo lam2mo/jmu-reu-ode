@@ -11,7 +11,7 @@ do
 		for degree in {15..80}
 		#Lower degrees get stuck
 		do
-			echo "$degree"
+			#echo "$degree"
 			./FlameEquation .5 "$degree" "$time" 
 			cat timeComparisonFlame.dat >> FlameAllTests.dat
 			
