@@ -143,8 +143,8 @@ pair<vector<double>,vector<double>> generateSolutionStepper(double a,double x0, 
 int main(int argc, const char* argv[]){
 	
 	// check parameters
-    if (argc != 6) {
-        cout << "Usage: " << argv[0] << " <a> <x0> <xp0> <tn> <dt>" << endl;
+    if (argc != 7) {
+        cout << "Usage: " << argv[0] << " <a> <x0> <xp0> <tn> <dt> <n>" << endl;
         return EXIT_FAILURE;
     }
 
@@ -154,6 +154,7 @@ int main(int argc, const char* argv[]){
     double x00  = stod(argv[3], NULL);
     double end = stod(argv[4], NULL);
     double step = stod(argv[5], NULL);
+    int n = strtol(argv[6], NULL, 10);
 	/*
 	a  = -1;
 	x0 = 1;
@@ -161,7 +162,7 @@ int main(int argc, const char* argv[]){
 	end = 2;
 	step = 1/8.0;
 	*/
-	int n = 10;
+	//int n = 10;
 	vector<double> coeff = coefficients(a,x0,x00,n);	
 	
 	vector<double> solutionStepper = generateSolutionStepper(a,x0,x00,step,1,end, n).first;
