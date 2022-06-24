@@ -1,54 +1,53 @@
 /**
- * JMU REU 2021
- *
- * GUI view for ODE solver
- *
- * @author Mike Lam
+ * JMU REU 2022
+ * 
+ * Container for the data needed to represent a singular view of an ODE.
+ * 
+ * @author Mike Lam, Benjamin Huber
+ * @version 6/23/2022
  */
-
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.*;
-import java.io.*;
-import java.util.*;
-import javax.swing.*;
-import javax.swing.event.*;
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import javax.imageio.ImageIO;
+import javax.swing.BoxLayout;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.JTextField;
 
-class ODEViewer extends JFrame implements ChangeListener, DocumentListener
-{
-    // parameter info
+
+public class ODEView extends JPanel implements ChangeListener, DocumentListener {
     private final double PARAM_FACTOR = 100.0;
-    private class Parameter
-    {
-        public String label;
-        public double min;
-        public double def;  // default
-        public double max;
-        public double value;
-
-        public Parameter(String label, double min, double def, double max)
-        {
-            this.label = label;
-            this.min = min;
-            this.def = def;
-            this.max = max;
-            this.value = def;
-        }
-    }
-
-    // dynamic components
+    private boolean updating = false;
     private JLabel description;
-    private Map<String, Parameter> parameters;
-    private java.util.List<String> commands;
-    private java.util.List<String> gnuplotScript;
-    private String imageFilename;
     private JLabel image;
+    private List<String> commands;
+    private List<String> gnuplotScript;
     private Map<String, JTextField> fields;
     private Map<String, JSlider> sliders;
+    private Map<String, Parameter> parameters;
+    // private String configFileLocation;
+    private String imageFilename;
+    private String title;
 
-    public ODEViewer(File configFile)
-    {
+    public ODEView (File configFile) {
+        // configFileLocation = configFile.getParentFile().getAbsolutePath();
         // parse configuration file
         description = new JLabel();
         parameters = new TreeMap<String, Parameter>();
@@ -101,7 +100,6 @@ class ODEViewer extends JFrame implements ChangeListener, DocumentListener
         sliderPanel.add(description);
         fields = new TreeMap<String, JTextField>();
         sliders = new TreeMap<String, JSlider>();
-        int i = 0;
         for (Parameter p : orderedParameters) {
             JPanel lblPanel = new JPanel();
             lblPanel.setLayout(new BoxLayout(lblPanel, BoxLayout.LINE_AXIS));
@@ -122,15 +120,14 @@ class ODEViewer extends JFrame implements ChangeListener, DocumentListener
             tmpPanel.add(lblPanel, BorderLayout.WEST);
             tmpPanel.add(slider, BorderLayout.CENTER);
             sliderPanel.add(tmpPanel);
-            i++;
         }
 
         // main window consists of image panel and slider panel
-        Container cp = getContentPane();
+        Container cp = this;
         cp.setLayout(new BorderLayout());
         cp.add(imagePanel, BorderLayout.CENTER);
         cp.add(sliderPanel, BorderLayout.SOUTH);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(700, 700);
         setVisible(true);
 
@@ -143,6 +140,7 @@ class ODEViewer extends JFrame implements ChangeListener, DocumentListener
 
             // run all commands
             for (String cmd : commands) {
+                // cmd = cmd.replaceAll("./", configFileLocation + "/");
                 for (Parameter p : parameters.values()) {
                     cmd = cmd.replaceAll("\\$"+p.label, ""+p.value);
                 }
@@ -182,21 +180,30 @@ class ODEViewer extends JFrame implements ChangeListener, DocumentListener
         }
     }
 
-    private boolean updating = false;
-
-    public void stateChanged(ChangeEvent e)
-    {
-        if (updating) return;
-        updating = true;
-        for (Parameter p : parameters.values()) {
-            double value = (double)(sliders.get(p.label).getValue()) / PARAM_FACTOR;
-            p.value = value;
-            fields.get(p.label).setText("" + value);
-        }
-        updatePlot();
-        updating = false;
+    /**
+     * Private mutator method for title.  Really shouldn't be necessary, and can probaly be 
+     * removed later, but I wanted to keep it in for easier editability.
+     * 
+     * @param title the new title of the panel
+     */
+    private void setTitle(String title) {
+        this.title = title;
     }
 
+    /**
+     * Accessor method for title.  This is used so ODEViewer can name its TabbedPanes when I 
+     * get to implementing that.
+     * 
+     * @return
+     */
+    public String getTitle() {
+        return title;
+    }
+
+    @Override
+    public void changedUpdate(DocumentEvent e) { /* don't need to handle style updates */ }
+
+    @Override
     public void insertUpdate(DocumentEvent e)
     {
         if (updating) return;
@@ -213,39 +220,22 @@ class ODEViewer extends JFrame implements ChangeListener, DocumentListener
         }
         updating = false;
     }
-    public void removeUpdate(DocumentEvent e)
-    {
+
+    @Override
+    public void removeUpdate(DocumentEvent e) {
         insertUpdate(e);
     }
-    public void changedUpdate(DocumentEvent e) { /* don't need to handle style updates */ }
 
-    public static void main(String[] args)
-    {
-        File f;
-        if (args.length == 1) {
-            f = new File(args[0]);
-        } else {
-            JFileChooser dialog = new JFileChooser();
-            dialog.setCurrentDirectory(new File(System.getProperty("user.dir")));
-            dialog.setFileFilter(new javax.swing.filechooser.FileFilter() {
-                public boolean accept(File f) {
-                    return f.isDirectory() || f.getName().endsWith(".cfg");
-                }
-                public String getDescription() {
-                    return "Configurations (*.cfg)";
-                }
-            });
-            int rval = dialog.showOpenDialog(null);
-            if (rval == JFileChooser.APPROVE_OPTION) {
-                f = dialog.getSelectedFile();
-            } else {
-                return;
-            }
+    @Override
+    public void stateChanged(ChangeEvent e) {
+        if (updating) return;
+        updating = true;
+        for (Parameter p : parameters.values()) {
+            double value = (double)(sliders.get(p.label).getValue()) / PARAM_FACTOR;
+            p.value = value;
+            fields.get(p.label).setText("" + value);
         }
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                new ODEViewer(f);
-            }
-        });
+        updatePlot();
+        updating = false;
     }
 }

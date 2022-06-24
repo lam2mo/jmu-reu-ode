@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-g -O0 -Wall -std=c++11
+CXXFLAGS= -I /usr/local/sbin/boost_1_79_0 -g -O0 -Wall -std=c++11
 LDFLAGS=
 
 TARGETS=solve_p1_fp64 solve_p1_fp32 \
