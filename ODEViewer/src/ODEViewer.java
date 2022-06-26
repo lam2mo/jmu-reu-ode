@@ -3,51 +3,57 @@
  *
  * GUI view for ODE solver
  *
- * @author Mike Lam
+ * @author Mike Lam, Benjamin Huber
+ * @version 6/26/2022
  */
 
 import java.awt.*;
-import java.io.*;
 import javax.swing.*;
 
 class ODEViewer extends JFrame
 {
     // parameter info
-    private File file;
+    private JTabbedPane mainPanel;
 
     public ODEViewer() {
-        file = selectFile();
+        super();
+
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Container cp = this.getContentPane();
-        cp.add(new ODEView(file));
+        cp.setLayout(new BorderLayout());
+
+        mainPanel = new JTabbedPane();
+        cp.add(mainPanel, BorderLayout.CENTER);
+
+        setupMenu();
         this.setVisible(true);
-        this.setSize(700, 700);
+        this.setSize(700,700);
+
+        mainPanel.setVisible(true);
+    }
+
+    private void setupMenu() {
+
+        JMenuBar menuBar = new JMenuBar();
+        setJMenuBar(menuBar);
+
+        // File Menu
+        JMenu fileMenu = new JMenu("File");
+        // New Sub Menu
+        JMenu newMenu = new JMenu("New");
+        NewODEView newODEViewAction = new NewODEView(this);
+        newMenu.add(newODEViewAction);
+        fileMenu.add(newMenu);
+        menuBar.add(fileMenu);
     }
 
     /**
-     * Selects the file, returns null if the file is not found.
+     * Adds a new tab to our Viewer.
      * 
-     * @return the file selected, otherwise null.
+     * @param panel the panel to add
      */
-    private File selectFile() {
-        File f;
-        JFileChooser dialog = new JFileChooser();
-        dialog.setCurrentDirectory(new File(System.getProperty("user.dir")));
-        dialog.setFileFilter(new javax.swing.filechooser.FileFilter() {
-            public boolean accept(File f) {
-                return f.isDirectory() || f.getName().endsWith(".cfg");
-            }
-            public String getDescription() {
-                return "Configurations (*.cfg)";
-            }
-        });
-        int rval = dialog.showOpenDialog(null);
-        if (rval == JFileChooser.APPROVE_OPTION) {
-            f = dialog.getSelectedFile();
-        } else {
-            return null;
-        }
-        return f;
+    public void addNewTab(ODEView panel) {
+        mainPanel.add(panel.getTitle(), panel);
     }
 
     public static void main(String[] args)
