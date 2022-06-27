@@ -35,6 +35,7 @@
 solve_*_fp64
 solve_*_fp32
 solve_p3
+solve_p3_mp
 solve_p4
 solve_p5
 coeff

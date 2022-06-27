@@ -1,10 +1,10 @@
-CXX=g++
-CXXFLAGS= -I /usr/local/sbin/boost_1_79_0 -g -O0 -Wall -std=c++11
+#CXX=g++
+CXXFLAGS= -I /usr/local/sbin/boost_1_79_0 -g -O3 -Wall -std=c++11
 LDFLAGS=
 
 TARGETS=solve_p1_fp64 solve_p1_fp32 \
         solve_p2_fp64 solve_p2_fp32 \
-		coeff solve_p3 solve_p4 solve_p5 \
+		coeff solve_p3 solve_p3_mp solve_p4 solve_p5 \
 		izhikevich_fp64 izhikevich_fp32
 
 all: $(TARGETS)
@@ -25,6 +25,9 @@ solve_p2_fp32: solve_p2.cpp
 	$(CXX) $(CXXFLAGS) -Dreal_t=float  -o $@ $^ $(LDFLAGS)
 
 solve_p3: solve_p3.cpp
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+
+solve_p3_mp: solve_p3_mp.cpp
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 solve_p4: solve_p4.cpp
