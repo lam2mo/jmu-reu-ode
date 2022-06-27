@@ -8,6 +8,7 @@
  */
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.awt.GridLayout;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -36,22 +37,21 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
     private final double PARAM_FACTOR = 100.0;
     private boolean updating = false;
     private JLabel description;
-    private JLabel image;
+    private List<JLabel> images;
     private List<String> commands;
     private List<String> gnuplotScript;
     private Map<String, JTextField> fields;
     private Map<String, JSlider> sliders;
     private Map<String, Parameter> parameters;
-    // private String configFileLocation;
-    private String imageFilename;
+    private List<String> imageFilenames;
     private String title;
 
     public ODEView (File configFile) {
-        // configFileLocation = configFile.getParentFile().getAbsolutePath();
-        // parse configuration file
+        // List of all the image filenames that appear in the file.
+        imageFilenames = new ArrayList<String>();
         description = new JLabel();
         parameters = new TreeMap<String, Parameter>();
-        java.util.List<Parameter> orderedParameters = new ArrayList<Parameter>();
+        List<Parameter> orderedParameters = new ArrayList<Parameter>();
         commands = new ArrayList<String>();
         gnuplotScript = new ArrayList<String>();
         BufferedReader file;
@@ -77,7 +77,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 } else if (line.startsWith("gnuplot")) {
                     gnuplotScript.add(line.replaceFirst("gnuplot ", ""));
                 } else if (line.startsWith("image")) {
-                    imageFilename = line.replaceFirst("image ", "");
+                    imageFilenames.add(line.replaceFirst("image ", ""));
                 }
                 line = file.readLine();
             }
@@ -91,8 +91,29 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
 
         // image panel consists of just a single label
         JPanel imagePanel = new JPanel();
-        image = new JLabel();
-        imagePanel.add(image);
+        // Get size of grid, should be refined later to a more reasonable approach
+        int size = imageFilenames.size();
+        int n = 0;
+        while (n < size) {
+            if (n < 2) {
+                n += 1;
+            }
+            else {
+                n *= n;
+            }
+        }
+
+        // set grid size
+        imagePanel.setLayout(new GridLayout(n, n, 2, 2));
+        images = new ArrayList<JLabel>();
+
+        // instantiate our JLabels and add them to the imagePanel
+        for (int i = 0; i < size; i++) {
+            images.add(new JLabel());
+            images.get(i).setVisible(true);
+            imagePanel.add(images.get(i));
+        }
+        imagePanel.setVisible(true);
 
         // slider panel consists of a stack of labels and sliders
         JPanel sliderPanel = new JPanel();
@@ -169,14 +190,24 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             }
             reader.close();
 
-            // read and display image
-            BufferedImage img = ImageIO.read(new File(imageFilename));
-            image.setIcon(new ImageIcon(img));
+            // read and display images
+            for (int i = 0; i < imageFilenames.size(); i++) {
+                try {
+                    BufferedImage img = ImageIO.read(new File(imageFilenames.get(i)));
+                    images.get(i).setIcon(new ImageIcon(img));
+                }
+                catch (NullPointerException ex) {
+                    images.get(i).setIcon(null);
+                }
+            }
 
         } catch (IOException ex) {
             ex.printStackTrace();
         } catch (NullPointerException ex) {
-            image.setIcon(null);
+            ex.printStackTrace();
+            for (int i = 0; i < images.size(); i++) {
+                images.get(i).setIcon(null);
+            }
         }
     }
 
@@ -216,7 +247,9 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             }
             updatePlot();
         } catch (NumberFormatException ex) {
-            image.setIcon(null);
+            for (int i = 0; i < images.size(); i++) {
+                images.get(i).setIcon(null);
+            }
         }
         updating = false;
     }

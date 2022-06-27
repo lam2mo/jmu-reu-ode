@@ -44,5 +44,5 @@ coeff: coeff.cpp
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
-	rm -rf $(TARGETS) *.dSYM *.class
+	rm -rf $(TARGETS) *.dSYM *.class *.png
 

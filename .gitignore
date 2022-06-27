@@ -48,3 +48,6 @@ out.png
 
 # Temporary
 *.swp
+
+# Graphs and Images
+*.png
