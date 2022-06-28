@@ -93,15 +93,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
         JPanel imagePanel = new JPanel();
         // Get size of grid, should be refined later to a more reasonable approach
         int size = imageFilenames.size();
-        int n = 0;
-        while (n < size) {
-            if (n < 2) {
-                n += 1;
-            }
-            else {
-                n *= n;
-            }
-        }
+        int n = (int)(Math.sqrt((double)size)+0.5);
 
         // set grid size
         imagePanel.setLayout(new GridLayout(n, n, 2, 2));
