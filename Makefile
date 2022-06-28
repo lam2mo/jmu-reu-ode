@@ -1,5 +1,7 @@
 #CXX=g++
-CXXFLAGS= -I /usr/local/sbin/boost_1_79_0 -g -O3 -Wall -std=c++11
+BOOSTPATH=/opt/homebrew/include
+#BOOSTPATH=/usr/local/sbin/boost_1_79_0
+CXXFLAGS=-I$(BOOSTPATH) -g -O3 -Wall -std=c++11
 LDFLAGS=
 
 TARGETS=solve_p1_fp64 solve_p1_fp32 \
