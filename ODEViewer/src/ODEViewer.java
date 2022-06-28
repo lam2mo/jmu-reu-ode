@@ -7,6 +7,7 @@
  * @version 6/26/2022
  */
 
+import java.io.*;
 import java.awt.*;
 import javax.swing.*;
 
@@ -60,7 +61,10 @@ class ODEViewer extends JFrame
     {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                new ODEViewer();
+                ODEViewer v = new ODEViewer();
+                for (int i = 0; i < args.length; i++) {
+                    v.addNewTab(new ODEView(new File(args[i])));
+                }
             }
         });
     }
