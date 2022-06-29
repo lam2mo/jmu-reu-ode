@@ -28,7 +28,7 @@ class ODEViewer extends JFrame
 
         setupMenu();
         this.setVisible(true);
-        this.setSize(700,700);
+        this.setSize(840,950);
 
         mainPanel.setVisible(true);
     }
