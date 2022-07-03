@@ -11,24 +11,30 @@ package jmu.reu.ode;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.GridLayout;
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.ImageIcon;
+
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.LogAxis;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.xy.DefaultXYDataset;
+
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
@@ -38,24 +44,23 @@ import javax.swing.JTextField;
 public class ODEView extends JPanel implements ChangeListener, DocumentListener {
     private final double PARAM_FACTOR = 100.0;
     private boolean updating = false;
+    private int size = 0;
     private JLabel description;
-    private List<JLabel> images;
+    private List<ChartPanel> charts;
     private List<String> commands;
-    private List<String> gnuplotScript;
+    private List<String> plotScript;
     private Map<String, JTextField> fields;
     private Map<String, JSlider> sliders;
     private Map<String, Parameter> parameters;
-    private List<String> imageFilenames;
     private String title;
 
     public ODEView (File configFile) {
         // List of all the image filenames that appear in the file.
-        imageFilenames = new ArrayList<String>();
         description = new JLabel();
         parameters = new TreeMap<String, Parameter>();
         List<Parameter> orderedParameters = new ArrayList<Parameter>();
         commands = new ArrayList<String>();
-        gnuplotScript = new ArrayList<String>();
+        plotScript = new ArrayList<String>();
         BufferedReader file;
         String line = "";
         try {
@@ -76,10 +81,9 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     orderedParameters.add(p);
                 } else if (line.startsWith("run")) {
                     commands.add(line.replaceFirst("run ", ""));
-                } else if (line.startsWith("gnuplot")) {
-                    gnuplotScript.add(line.replaceFirst("gnuplot ", ""));
-                } else if (line.startsWith("image")) {
-                    imageFilenames.add(line.replaceFirst("image ", ""));
+                } else if (line.startsWith("plot")) {
+                    plotScript.add(line.replaceFirst("plot ", ""));
+                    size+=1;
                 }
                 line = file.readLine();
             }
@@ -94,18 +98,17 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
         // image panel consists of just a single label
         JPanel imagePanel = new JPanel();
         // Get size of grid, should be refined later to a more reasonable approach
-        int size = imageFilenames.size();
         int n = (int)(Math.sqrt((double)size)+0.5);
 
         // set grid size
         imagePanel.setLayout(new GridLayout(n, n, 2, 2));
-        images = new ArrayList<JLabel>();
+        charts = new ArrayList<ChartPanel>();
 
         // instantiate our JLabels and add them to the imagePanel
         for (int i = 0; i < size; i++) {
-            images.add(new JLabel());
-            images.get(i).setVisible(true);
-            imagePanel.add(images.get(i));
+            charts.add(new ChartPanel(null));
+            charts.get(i).setVisible(true);
+            imagePanel.add(charts.get(i));
         }
         imagePanel.setVisible(true);
 
@@ -170,39 +173,110 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             }
 
             // run Gnuplot
-            Process process = Runtime.getRuntime().exec("gnuplot");
-            PrintWriter gnuplot = new PrintWriter(process.getOutputStream());
-            for (String line : gnuplotScript) {
-                gnuplot.println(line);
+            // Process process = Runtime.getRuntime().exec("gnuplot");
+            // PrintWriter gnuplot = new PrintWriter(process.getOutputStream());
+            // for (String line : gnuplotScript) {
+            //     gnuplot.println(line);
+            // }
+            // gnuplot.close();
+            // BufferedReader reader = new BufferedReader(
+            //         new InputStreamReader(process.getInputStream()));
+            // String line;
+            // while ((line = reader.readLine()) != null) {
+            //     System.out.println(line);
+            // }
+            // reader.close();
+            int count = 0;
+            for (String line : plotScript) {
+                String[] series = line.trim().split(", ");
+                DefaultXYDataset dataset = new DefaultXYDataset();
+                for (int i = 0; i < series.length; i++) {
+                    String[] arguments = series[i].trim().split("\\s+(?![^\\[]*\\])");
+                    File datafile = new File(arguments[0]);
+                    ArrayList<String> fileLines = loadData(datafile);
+                    String[] numbers = arguments[1].split(":");
+                    int x = Integer.parseInt(numbers[0]);
+                    int y = Integer.parseInt(numbers[1]);
+                    double[][] data = processData(fileLines, x, y);
+                    dataset.addSeries(arguments[2].substring(1, arguments[2].length()-1), data);
+                }
+                XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, true);
+                NumberAxis xAxis = new NumberAxis();
+                LogAxis yAxis = new LogAxis();
+                XYPlot plot = new XYPlot(dataset, xAxis, yAxis, renderer);
+                JFreeChart chart = new JFreeChart(plot);
+                charts.get(count).setChart(chart);
+                count++;
             }
-            gnuplot.close();
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-            }
-            reader.close();
 
             // read and display images
-            for (int i = 0; i < imageFilenames.size(); i++) {
-                try {
-                    BufferedImage img = ImageIO.read(new File(imageFilenames.get(i)));
-                    images.get(i).setIcon(new ImageIcon(img));
-                }
-                catch (NullPointerException ex) {
-                    images.get(i).setIcon(null);
-                }
-            }
+            // for (int i = 0; i < imageFilenames.size(); i++) {
+            //     try {
+            //         BufferedImage img = ImageIO.read(new File(imageFilenames.get(i)));
+            //         images.get(i).setIcon(new ImageIcon(img));
+            //     }
+            //     catch (NullPointerException ex) {
+            //         images.get(i).setIcon(null);
+            //     }
+            // }
 
         } catch (IOException ex) {
             ex.printStackTrace();
         } catch (NullPointerException ex) {
             ex.printStackTrace();
-            for (int i = 0; i < images.size(); i++) {
-                images.get(i).setIcon(null);
+            // for (int i = 0; i < images.size(); i++) {
+            //     images.get(i).setIcon(null);
+            // }
+        }
+    }
+
+    /**
+     * A helper method that takes a list of Strings and 2 integers, each 
+     * representing what columns of data will represent x and y, and puts them
+     * into a 2D array for use with the DefaultXYDataset.
+     * @param lines your String lines
+     * @param x your x column
+     * @param y your y column
+     * @return
+     */
+    private double[][] processData(List<String> lines, int x, int y) {
+        double[][] data = new double[2][lines.size()];
+        try {
+            for (int i = 0; i < lines.size(); i++) {
+                String[] numbers = lines.get(i).split(" +");
+                data[0][i] = Double.parseDouble(numbers[x-1]);
+                data[1][i] = Double.parseDouble(numbers[y-1]);
             }
         }
+        catch (ArrayIndexOutOfBoundsException ex) {
+            System.out.println("There is no valid column " + x + " or " + y + ".");
+            ex.printStackTrace();
+        }
+        return data;
+    }
+
+    /**
+     * Helper method to load data from a file.
+     * @param file the file to load data from
+     * @return the lines of the file as an arrayList
+     */
+    private ArrayList<String> loadData(File file) {
+        ArrayList<String> lines = new ArrayList<String>();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line.trim());
+            }
+            reader.close();
+        } catch (FileNotFoundException ex) {
+            System.out.println("No such file exists.");
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            System.out.println("Error reading in file.");
+            ex.printStackTrace();
+        }
+        return lines;
     }
 
     /**
@@ -241,9 +315,6 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             }
             updatePlot();
         } catch (NumberFormatException ex) {
-            for (int i = 0; i < images.size(); i++) {
-                images.get(i).setIcon(null);
-            }
         }
         updating = false;
     }
