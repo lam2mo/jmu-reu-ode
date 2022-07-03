@@ -1,6 +1,6 @@
-#CXX=g++
-BOOSTPATH=/opt/homebrew/include
-#BOOSTPATH=/usr/local/sbin/boost_1_79_0
+CXX=g++
+#BOOSTPATH=/opt/homebrew/include
+BOOSTPATH=/usr/local/sbin/boost_1_79_0
 CXXFLAGS=-I$(BOOSTPATH) -g -O3 -Wall -std=c++11
 LDFLAGS=
 
