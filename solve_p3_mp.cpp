@@ -15,6 +15,7 @@ using namespace boost::multiprecision;
 
 typedef number<backends::cpp_bin_float<11, backends::digit_base_2, void, std::int16_t, -14,   15>, et_off> cpp_bin_float_half;
 typedef number<backends::cpp_bin_float<8,  backends::digit_base_2, void, std::int16_t, -126, 127>, et_off> cpp_bin_float_bfloat;
+typedef number<backends::cpp_bin_float<3,  backends::digit_base_2, void, std::int16_t,   -2,  13>, et_off> cpp_bin_float_minifloat;
 
 ofstream out;
 
@@ -195,7 +196,9 @@ int main(int argc, const char* argv[]){
     int n = strtol(argv[6], NULL, 10);
     int prec = stod(argv[7], NULL);
 
-    if (prec == 16) {
+    /*if (prec == 8) {
+        solve_p3((cpp_bin_float_minifloat)a, (cpp_bin_float_minifloat)x0, (cpp_bin_float_minifloat)x00, (cpp_bin_float_minifloat)end, (cpp_bin_float_minifloat)step, n);
+    } else*/ if (prec <= 16) {
         //solve_p3((cpp_bin_float_half)a, (cpp_bin_float_half)x0, (cpp_bin_float_half)x00, (cpp_bin_float_half)end, (cpp_bin_float_half)step, n);
         solve_p3((cpp_bin_float_bfloat)a, (cpp_bin_float_bfloat)x0, (cpp_bin_float_bfloat)x00, (cpp_bin_float_bfloat)end, (cpp_bin_float_bfloat)step, n);
     } else if (prec <= 32) {
