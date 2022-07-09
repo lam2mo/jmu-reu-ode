@@ -6,7 +6,7 @@ package jmu.reu.ode;
  * Container for the data needed to represent a singular view of an ODE.
  * 
  * @author Mike Lam, Benjamin Huber
- * @version 6/23/2022
+ * @version 7/9/2022
  */
 import java.awt.BorderLayout;
 import java.awt.Container;
@@ -31,8 +31,10 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.LogAxis;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.Range;
 import org.jfree.data.xy.DefaultXYDataset;
 
 import javax.swing.JLabel;
@@ -76,7 +78,8 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     Parameter p = new Parameter(args[1],
                                 Double.parseDouble(args[2]),
                                 Double.parseDouble(args[3]),
-                                Double.parseDouble(args[4]));
+                                Double.parseDouble(args[4]),
+                                Double.parseDouble(args[5]));
                     parameters.put(p.label, p);
                     orderedParameters.add(p);
                 } else if (line.startsWith("run")) {
@@ -84,6 +87,8 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 } else if (line.startsWith("plot")) {
                     plotScript.add(line.replaceFirst("plot ", ""));
                     size+=1;
+                } else if (line.startsWith("set")) {
+                    plotScript.add(line);
                 }
                 line = file.readLine();
             }
@@ -129,10 +134,11 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             lblPanel.add(field);
             JPanel tmpPanel = new JPanel();
             tmpPanel.setLayout(new BorderLayout());
-            JSlider slider = new JSlider(
+            JSnapSlider slider = new JSnapSlider(
                     (int)(p.min * PARAM_FACTOR),
                     (int)(p.max * PARAM_FACTOR),
-                    (int)(p.def * PARAM_FACTOR));
+                    (int)(p.def * PARAM_FACTOR),
+                    (int)(p.snap * PARAM_FACTOR));
             slider.addChangeListener(this);
             sliders.put(p.label, slider);
             tmpPanel.add(lblPanel, BorderLayout.WEST);
@@ -172,53 +178,74 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 reader.close();
             }
 
-            // run Gnuplot
-            // Process process = Runtime.getRuntime().exec("gnuplot");
-            // PrintWriter gnuplot = new PrintWriter(process.getOutputStream());
-            // for (String line : gnuplotScript) {
-            //     gnuplot.println(line);
-            // }
-            // gnuplot.close();
-            // BufferedReader reader = new BufferedReader(
-            //         new InputStreamReader(process.getInputStream()));
-            // String line;
-            // while ((line = reader.readLine()) != null) {
-            //     System.out.println(line);
-            // }
-            // reader.close();
+            // build plot using JFreeChart
             int count = 0;
+            ValueAxis xAxis = new NumberAxis();
+            ValueAxis yAxis = new NumberAxis();
             for (String line : plotScript) {
-                String[] series = line.trim().split(", ");
-                DefaultXYDataset dataset = new DefaultXYDataset();
-                for (int i = 0; i < series.length; i++) {
-                    String[] arguments = series[i].trim().split("\\s+(?![^\\[]*\\])");
-                    File datafile = new File(arguments[0]);
-                    ArrayList<String> fileLines = loadData(datafile);
-                    String[] numbers = arguments[1].split(":");
-                    int x = Integer.parseInt(numbers[0]);
-                    int y = Integer.parseInt(numbers[1]);
-                    double[][] data = processData(fileLines, x, y);
-                    dataset.addSeries(arguments[2].substring(1, arguments[2].length()-1), data);
+                SeriesInfo sInfo = null;
+                if (line.substring(0, 4).equals("set ")) {
+                    String[] args = line.trim().split(" +");
+                    switch (args[1]) {
+                        case "log":
+                            switch (args[2]) {
+                                case "x":
+                                    xAxis = new LogAxis();
+                                    break;
+                                case "y":
+                                    yAxis = new LogAxis();
+                                    break;
+                            }
+                            break;
+                        case "numeric":
+                            switch (args[2]) {
+                                case "x":
+                                    xAxis = new NumberAxis();
+                                    break;
+                                case "y":
+                                    yAxis = new NumberAxis();
+                                    break;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                // Handles dataset loading.
+                } else {
+                    // Splits the individual "series" into an array for processing
+                    String[] series = line.trim().split(", ");
+                    DefaultXYDataset dataset = new DefaultXYDataset();
+                    // Loops over the series, splitting it and dealing with the arguments one at a time
+                    for (int i = 0; i < series.length; i++) {
+                        String[] arguments = series[i].trim().split("\\s+(?![^\\[]*\\])");
+                        File datafile = new File(arguments[0]);
+                        ArrayList<String> fileLines = loadData(datafile);
+                        String[] numbers = arguments[1].split(":");
+                        int x = Integer.parseInt(numbers[0]);
+                        int y = Integer.parseInt(numbers[1]);
+                        sInfo = processData(fileLines, x, y);
+                        dataset.addSeries(arguments[2].substring(1, arguments[2].length()-1), sInfo.data);
+                    }
+                    // Draws the chart
+                    XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, true);
+                    JFreeChart chart;
+                    // Try is to prevent it from crashing on invalid ranges.
+                    try {
+                        // This is to make it look nice on a LogAxis.  It still needs work at low values.
+                        if (yAxis instanceof LogAxis) {
+                            // ((LogAxis)yAxis).setSmallestValue(sInfo.min - 0.000000000001);
+                            ((LogAxis)yAxis).setRange(new Range(sInfo.min, sInfo.max + 4));
+                        }
+                        XYPlot plot = new XYPlot(dataset, xAxis, yAxis, renderer);
+                        chart = new JFreeChart(plot);
+                    }
+                    catch (IllegalArgumentException ex) {
+                        chart = null;
+                    }
+                    charts.get(count).setChart(chart);
+                    count++;
                 }
-                XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, true);
-                NumberAxis xAxis = new NumberAxis();
-                LogAxis yAxis = new LogAxis();
-                XYPlot plot = new XYPlot(dataset, xAxis, yAxis, renderer);
-                JFreeChart chart = new JFreeChart(plot);
-                charts.get(count).setChart(chart);
-                count++;
             }
-
-            // read and display images
-            // for (int i = 0; i < imageFilenames.size(); i++) {
-            //     try {
-            //         BufferedImage img = ImageIO.read(new File(imageFilenames.get(i)));
-            //         images.get(i).setIcon(new ImageIcon(img));
-            //     }
-            //     catch (NullPointerException ex) {
-            //         images.get(i).setIcon(null);
-            //     }
-            // }
 
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -239,20 +266,40 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
      * @param y your y column
      * @return
      */
-    private double[][] processData(List<String> lines, int x, int y) {
+    private SeriesInfo processData(List<String> lines, int x, int y) {
         double[][] data = new double[2][lines.size()];
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
         try {
-            for (int i = 0; i < lines.size(); i++) {
-                String[] numbers = lines.get(i).split(" +");
-                data[0][i] = Double.parseDouble(numbers[x-1]);
-                data[1][i] = Double.parseDouble(numbers[y-1]);
+            int lineCounter = 0;
+            int indexCounter = 0;
+            while (lineCounter < lines.size()) {
+                String[] numbers = lines.get(lineCounter).split(" +");
+                if (numbers[x-1].equals("nan") || numbers[y-1].equals("nan") 
+                    || numbers[x-1].equals("-nan") || numbers[y-1].equals("-nan")
+                    || numbers[x-1].equals("inf") || numbers[y-1].equals("inf")
+                    || numbers[x-1].equals("-inf") || numbers[y-1].equals("-inf")) {
+                    lineCounter+=1;
+                    continue;
+                }
+                data[0][indexCounter] = Double.parseDouble(numbers[x-1]);
+                double yValue = Double.parseDouble(numbers[y-1]);
+                if (yValue < min && yValue > 0) {
+                    min = yValue;
+                }
+                if (yValue > max) {
+                    max = yValue;
+                }
+                data[1][indexCounter] = yValue;
+                indexCounter+=1;
+                lineCounter+=1;
             }
         }
         catch (ArrayIndexOutOfBoundsException ex) {
             System.out.println("There is no valid column " + x + " or " + y + ".");
             ex.printStackTrace();
         }
-        return data;
+        return new SeriesInfo(data, min, max);
     }
 
     /**
