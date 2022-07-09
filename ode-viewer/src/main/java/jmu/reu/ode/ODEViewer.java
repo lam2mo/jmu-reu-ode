@@ -10,12 +10,14 @@ package jmu.reu.ode;
 
 import java.io.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import javax.swing.*;
 
 class ODEViewer extends JFrame
 {
     // parameter info
     private JTabbedPane mainPanel;
+    private CloseTab closeAction;
 
     public ODEViewer() {
         super();
@@ -45,8 +47,28 @@ class ODEViewer extends JFrame
         JMenu newMenu = new JMenu("New");
         NewODEView newODEViewAction = new NewODEView(this);
         newMenu.add(newODEViewAction);
+
+        // Close action
         fileMenu.add(newMenu);
+        closeAction = new CloseTab();
+        fileMenu.add(closeAction);
         menuBar.add(fileMenu);
+    }
+
+    public class CloseTab extends AbstractAction {
+
+        public CloseTab () {
+            putValue(AbstractAction.NAME, "Close");
+        }
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            
+            Component selected = mainPanel.getSelectedComponent();
+            if (selected != null) {
+                mainPanel.remove(selected);
+            }          
+        }
+        
     }
 
     /**
