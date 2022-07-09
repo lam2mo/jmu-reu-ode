@@ -52,3 +52,6 @@ out.png
 
 # Graphs and Images
 *.png
+
+#vscode
+.vscode
