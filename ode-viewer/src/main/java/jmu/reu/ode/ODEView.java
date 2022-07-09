@@ -186,26 +186,33 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 SeriesInfo sInfo = null;
                 if (line.substring(0, 4).equals("set ")) {
                     String[] args = line.trim().split(" +");
+                    // Get the title of the axis for applicable set commands
+                    String title = "";
+                    if (args.length == 4) {
+                        title = args[3];
+                    }
                     switch (args[1]) {
                         case "log":
                             switch (args[2]) {
                                 case "x":
-                                    xAxis = new LogAxis();
+                                    xAxis = new LogAxis(title);
                                     break;
                                 case "y":
-                                    yAxis = new LogAxis();
+                                    yAxis = new LogAxis(title);
                                     break;
                             }
                             break;
                         case "numeric":
                             switch (args[2]) {
                                 case "x":
-                                    xAxis = new NumberAxis();
+                                    xAxis = new NumberAxis(title);
                                     break;
                                 case "y":
-                                    yAxis = new NumberAxis();
+                                    yAxis = new NumberAxis(title);
                                     break;
                             }
+                            break;
+                        case "ghosting":
                             break;
                         default:
                             break;
