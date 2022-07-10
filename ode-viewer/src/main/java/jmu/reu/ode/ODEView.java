@@ -9,8 +9,10 @@ package jmu.reu.ode;
  * @version 7/9/2022
  */
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.GridLayout;
+import java.awt.Paint;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -45,6 +47,7 @@ import javax.swing.JTextField;
 
 public class ODEView extends JPanel implements ChangeListener, DocumentListener {
     private final double PARAM_FACTOR = 100.0;
+    private boolean ghosting = false;
     private boolean updating = false;
     private int size = 0;
     private JLabel description;
@@ -54,6 +57,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
     private Map<String, JTextField> fields;
     private Map<String, JSlider> sliders;
     private Map<String, Parameter> parameters;
+    private MapQueueLimited<String, double[][]> ghosts;
     private String title;
 
     public ODEView (File configFile) {
@@ -213,6 +217,11 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                             }
                             break;
                         case "ghosting":
+                            if (ghosting) {
+                                break;
+                            }
+                            ghosting = true;
+                            ghosts = new MapQueueLimited<>(Integer.parseInt(args[2]));
                             break;
                         default:
                             break;
@@ -222,6 +231,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     // Splits the individual "series" into an array for processing
                     String[] series = line.trim().split(", ");
                     DefaultXYDataset dataset = new DefaultXYDataset();
+                    String[] title = new String[series.length];
                     // Loops over the series, splitting it and dealing with the arguments one at a time
                     for (int i = 0; i < series.length; i++) {
                         String[] arguments = series[i].trim().split("\\s+(?![^\\[]*\\])");
@@ -231,7 +241,11 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                         int x = Integer.parseInt(numbers[0]);
                         int y = Integer.parseInt(numbers[1]);
                         sInfo = processData(fileLines, x, y);
-                        dataset.addSeries(arguments[2].substring(1, arguments[2].length()-1), sInfo.data);
+                        title[i] = arguments[2].substring(1, arguments[2].length()-1);
+                        dataset.addSeries(title[i], sInfo.data);
+                        if (ghosting) {
+                            ghosts.put(title[i], sInfo.data);
+                        }
                     }
                     // Draws the chart
                     XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, true);
@@ -244,7 +258,31 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                             ((LogAxis)yAxis).setRange(new Range(sInfo.min, sInfo.max + 4));
                         }
                         XYPlot plot = new XYPlot(dataset, xAxis, yAxis, renderer);
+                        // Ghosting stuff
+                        if (ghosting) {
+                            for (int i = 0; i < dataset.getSeriesCount(); i++) {
+                                Color color = Color.red;
+                                renderer.setSeriesPaint(i, color);
+                                DefaultXYDataset ghostSet = new DefaultXYDataset();
+                                int j = 0;
+                                for (double[][] ghostData : ghosts.getQueue(title[i])) {
+                                    if (j == 0) {
+                                        j++;
+                                        continue;
+                                    }
+                                    ghostSet.addSeries(title[i] + j, ghostData);
+                                    j++;
+                                }
+                                plot.setDataset(i + dataset.getSeriesCount(), ghostSet);
+                                plot.setRenderer(i + dataset.getSeriesCount(), new XYLineAndShapeRenderer());
+                                for (int k = 0; k < j; k++) {
+                                    color = color.darker();
+                                    plot.getRendererForDataset(ghostSet).setSeriesPaint(k, color);
+                                }
+                            }
+                        }
                         chart = new JFreeChart(plot);
+                        
                     }
                     catch (IllegalArgumentException ex) {
                         chart = null;
