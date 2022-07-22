@@ -8,11 +8,11 @@ package jmu.reu.ode;
  * @author Mike Lam, Benjamin Huber
  * @version 7/9/2022
  */
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.GridLayout;
-import java.awt.Paint;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -20,9 +20,13 @@ import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.swing.BoxLayout;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -33,10 +37,8 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.LogAxis;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.data.Range;
 import org.jfree.data.xy.DefaultXYDataset;
 
 import javax.swing.JLabel;
@@ -49,15 +51,21 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
     private final double PARAM_FACTOR = 100.0;
     private boolean ghosting = false;
     private boolean updating = false;
-    private int size = 0;
+    private int chartNum = 0;
     private JLabel description;
     private List<ChartPanel> charts;
+    private List<ChartSettings> cSettingsList;
     private List<String> commands;
     private List<String> plotScript;
+    private List<String> profileScript;
+    private List<String> setScript;
     private Map<String, JTextField> fields;
     private Map<String, JSlider> sliders;
     private Map<String, Parameter> parameters;
+    private Map<String, LineProfile> profiles;
+    private Map<String, File> fileMap;
     private MapQueueLimited<String, double[][]> ghosts;
+    private SeriesSettingsMap sSettings;
     private String title;
 
     public ODEView (File configFile) {
@@ -67,6 +75,13 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
         List<Parameter> orderedParameters = new ArrayList<Parameter>();
         commands = new ArrayList<String>();
         plotScript = new ArrayList<String>();
+        setScript = new ArrayList<String>();
+        sSettings = new SeriesSettingsMap();
+        profileScript = new ArrayList<String>();
+        cSettingsList = new ArrayList<>();
+        List<String> fileList = new ArrayList<>();
+        fileMap = new HashMap<>();
+        profiles = new HashMap<>();
         BufferedReader file;
         String line = "";
         try {
@@ -89,10 +104,16 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 } else if (line.startsWith("run")) {
                     commands.add(line.replaceFirst("run ", ""));
                 } else if (line.startsWith("plot")) {
-                    plotScript.add(line.replaceFirst("plot ", ""));
-                    size+=1;
-                } else if (line.startsWith("set")) {
                     plotScript.add(line);
+                    chartNum+=1;
+                } else if (line.startsWith("series")) {
+                    plotScript.add(line);
+                } else if (line.startsWith("set")) {
+                    setScript.add(line.replaceFirst("set ", ""));
+                } else if (line.startsWith("profile")) {
+                    profileScript.add(line);
+                } else if (line.startsWith("file")) {
+                    fileList.add(line);
                 }
                 line = file.readLine();
             }
@@ -104,22 +125,151 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             System.err.println("Invalid parameter: " + line);
         }
 
+        // handle file aliasing
+        for (String fileLine : fileList) {
+            List<String> matchList = new ArrayList<String>();
+            Pattern regex = Pattern.compile("[^\\s\"']+|\"[^\"]*\"|'[^']*'");
+            Matcher regexMatcher = regex.matcher(fileLine);
+            while (regexMatcher.find()) {
+                if (regexMatcher.group(1) != null) {
+                    // Add double-quoted string without the quotes
+                    matchList.add(regexMatcher.group(1));
+                } else if (regexMatcher.group(2) != null) {
+                    // Add single-quoted string without the quotes
+                    matchList.add(regexMatcher.group(2));
+                } else {
+                    // Add unquoted string
+                    matchList.add(regexMatcher.group());
+                }
+            }
+            fileMap.put(matchList.get(1), new File(matchList.get(2)));
+        }
+
+        // handle profiling
+        for (String profileLine : profileScript) {
+            String[] args = profileLine.split(" +");
+            LineProfile profile = new LineProfile();
+            switch (args[2]) {
+                case "hex":
+                    profile.setLineColor(args[3]);
+                    break;
+                case "rgb":
+                    String[] rgb = args[3].split(":");
+                    profile.setLineColor(new Color(Integer.parseInt(rgb[0]), 
+                                         Integer.parseInt(rgb[1]), Integer.parseInt(rgb[2])));
+                    break;
+                default:
+                    throw new InvalidConfigFormatException("Invalid color format in profiling");
+            }
+            if (args[4] != null) {
+                if (args[4].equals("weight")) {
+                    if (args[5] == null) {
+                        throw new InvalidConfigFormatException("No profile weight value specified");
+                    }
+                    float weight = Float.parseFloat(args[5]);
+                    profile.setLineWeight(weight);
+                }
+                else {
+                    throw new InvalidConfigFormatException("Invalid profile statement format");
+                }
+            }
+            profiles.put(args[1], profile);
+        }
+
         // image panel consists of just a single label
         JPanel imagePanel = new JPanel();
         // Get size of grid, should be refined later to a more reasonable approach
-        int n = (int)(Math.sqrt((double)size)+0.5);
+        int n = (int)(Math.sqrt((double)chartNum)+0.5);
 
         // set grid size
         imagePanel.setLayout(new GridLayout(n, n, 2, 2));
         charts = new ArrayList<ChartPanel>();
 
         // instantiate our JLabels and add them to the imagePanel
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < chartNum; i++) {
             charts.add(new ChartPanel(null));
             charts.get(i).setVisible(true);
             imagePanel.add(charts.get(i));
         }
         imagePanel.setVisible(true);
+
+        // Setup charts & series settings one time at the beginning
+        ChartSettings chartSettings;
+        for (String plotLine : plotScript) {
+            // a "plot" level command
+            if (plotLine.startsWith("plot ")) {
+                chartSettings = new ChartSettings();
+                // Regex to split on spaces when not in single or double quotes (thanks SOF)
+                List<String> matchList = new ArrayList<String>();
+                Pattern regex = Pattern.compile("[^\\s\"']+|\"[^\"]*\"|'[^']*'");
+                Matcher regexMatcher = regex.matcher(plotLine);
+                while (regexMatcher.find()) {
+                    if (regexMatcher.group(1) != null) {
+                        // Add double-quoted string without the quotes
+                        matchList.add(regexMatcher.group(1));
+                    } else if (regexMatcher.group(2) != null) {
+                        // Add single-quoted string without the quotes
+                        matchList.add(regexMatcher.group(2));
+                    } else {
+                        // Add unquoted string
+                        matchList.add(regexMatcher.group());
+                    }
+                }
+                // Verify correct format.
+                if (!matchList.get(1).equals("xaxis") || !matchList.get(5).equals("yaxis")) {
+                    throw new InvalidConfigFormatException("xaxis and yaxis not specified");
+                }
+                // Set axis types and titles
+                switch(matchList.get(2)) {
+                    case "num":
+                        chartSettings.setXAxis(new NumberAxis(matchList.get(4)));
+                        break;
+                    case "log":
+                        chartSettings.setXAxis(new LogAxis(matchList.get(4)));
+                        break;
+                    default:
+                        throw new InvalidConfigFormatException("Invalid xaxis types specified");
+                }
+                switch(matchList.get(6)) {
+                    case "num":
+                        chartSettings.setYAxis(new NumberAxis(matchList.get(8)));
+                        break;
+                    case "log":
+                        chartSettings.setYAxis(new LogAxis(matchList.get(8)));
+                        break;
+                    default:
+                        throw new InvalidConfigFormatException("Invalid yaxis types specified");
+                }
+                cSettingsList.add(chartSettings);
+                // TODO: Set Ranges if specified
+            }
+            // Put series settings in sSettings map (should make array later) will recode this whole
+            // thing later
+            else if (plotLine.startsWith("series ")) {
+                List<String> matchList = new ArrayList<String>();
+                Pattern regex = Pattern.compile("[^\\s\"']+|\"[^\"]*\"|'[^']*'");
+                Matcher regexMatcher = regex.matcher(plotLine);
+                while (regexMatcher.find()) {
+                    if (regexMatcher.group(1) != null) {
+                        // Add double-quoted string without the quotes
+                        matchList.add(regexMatcher.group(1));
+                    } else if (regexMatcher.group(2) != null) {
+                        // Add single-quoted string without the quotes
+                        matchList.add(regexMatcher.group(2));
+                    } else {
+                        // Add unquoted string
+                        matchList.add(regexMatcher.group());
+                    }
+                }
+                SeriesSettings settings = sSettings.getSettings(matchList.get(4));
+                settings.setLineProfile(profiles.get(matchList.get(6)));
+                String[] columns = matchList.get(2).split(":");
+                settings.setXColumn(Integer.parseInt(columns[0]));
+                settings.setYColumn(Integer.parseInt(columns[1]));
+                settings.setInputFile(fileMap.get(matchList.get(1)));
+                plotLine = "series<break>" + matchList.get(1) + "<break>" + matchList.get(4);
+            }
+        }
 
         // slider panel consists of a stack of labels and sliders
         JPanel sliderPanel = new JPanel();
@@ -165,7 +315,6 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
     public void updatePlot()
     {
         try {
-
             // run all commands
             for (String cmd : commands) {
                 // cmd = cmd.replaceAll("./", configFileLocation + "/");
@@ -182,116 +331,79 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 reader.close();
             }
 
-            // build plot using JFreeChart
-            int count = 0;
-            ValueAxis xAxis = new NumberAxis();
-            ValueAxis yAxis = new NumberAxis();
+            // parse through the plot and series commands
+            // necessary data for plot-level commands
+            ChartSettings chartSettings;
+            XYPlot plot = null;
+            int plotIndex = -1;
+            int seriesIndex = -1;
             for (String line : plotScript) {
-                SeriesInfo sInfo = null;
-                if (line.substring(0, 4).equals("set ")) {
-                    String[] args = line.trim().split(" +");
-                    // Get the title of the axis for applicable set commands
-                    String title = "";
-                    if (args.length == 4) {
-                        title = args[3];
-                    }
-                    switch (args[1]) {
-                        case "log":
-                            switch (args[2]) {
-                                case "x":
-                                    xAxis = new LogAxis(title);
-                                    break;
-                                case "y":
-                                    yAxis = new LogAxis(title);
-                                    break;
-                            }
-                            break;
-                        case "numeric":
-                            switch (args[2]) {
-                                case "x":
-                                    xAxis = new NumberAxis(title);
-                                    break;
-                                case "y":
-                                    yAxis = new NumberAxis(title);
-                                    break;
-                            }
-                            break;
-                        case "ghosting":
-                            if (ghosting) {
-                                break;
-                            }
-                            ghosting = true;
-                            ghosts = new MapQueueLimited<>(Integer.parseInt(args[2]));
-                            break;
-                        default:
-                            break;
-                    }
-                // Handles dataset loading.
-                } else {
-                    // Splits the individual "series" into an array for processing
-                    String[] series = line.trim().split(", ");
-                    DefaultXYDataset dataset = new DefaultXYDataset();
-                    String[] title = new String[series.length];
-                    // Loops over the series, splitting it and dealing with the arguments one at a time
-                    for (int i = 0; i < series.length; i++) {
-                        String[] arguments = series[i].trim().split("\\s+(?![^\\[]*\\])");
-                        File datafile = new File(arguments[0]);
-                        ArrayList<String> fileLines = loadData(datafile);
-                        String[] numbers = arguments[1].split(":");
-                        int x = Integer.parseInt(numbers[0]);
-                        int y = Integer.parseInt(numbers[1]);
-                        sInfo = processData(fileLines, x, y);
-                        title[i] = arguments[2].substring(1, arguments[2].length()-1);
-                        dataset.addSeries(title[i], sInfo.data);
-                        if (ghosting) {
-                            ghosts.put(title[i], sInfo.data);
-                        }
-                    }
-                    // Draws the chart
-                    XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, true);
-                    JFreeChart chart;
-                    // Try is to prevent it from crashing on invalid ranges.
-                    try {
-                        // This is to make it look nice on a LogAxis.  It still needs work at low values.
-                        if (yAxis instanceof LogAxis) {
-                            // ((LogAxis)yAxis).setSmallestValue(sInfo.min - 0.000000000001);
-                            ((LogAxis)yAxis).setRange(new Range(sInfo.min, sInfo.max + 4));
-                        }
-                        XYPlot plot = new XYPlot(dataset, xAxis, yAxis, renderer);
-                        // Ghosting stuff
-                        if (ghosting) {
-                            for (int i = 0; i < dataset.getSeriesCount(); i++) {
-                                Color color = Color.red;
-                                renderer.setSeriesPaint(i, color);
-                                DefaultXYDataset ghostSet = new DefaultXYDataset();
-                                int j = 0;
-                                for (double[][] ghostData : ghosts.getQueue(title[i])) {
-                                    if (j == 0) {
-                                        j++;
-                                        continue;
-                                    }
-                                    ghostSet.addSeries(title[i] + j, ghostData);
-                                    j++;
-                                }
-                                plot.setDataset(i + dataset.getSeriesCount(), ghostSet);
-                                plot.setRenderer(i + dataset.getSeriesCount(), new XYLineAndShapeRenderer());
-                                for (int k = 0; k < j; k++) {
-                                    color = color.darker();
-                                    plot.getRendererForDataset(ghostSet).setSeriesPaint(k, color);
-                                }
-                            }
-                        }
-                        chart = new JFreeChart(plot);
-                        
-                    }
-                    catch (IllegalArgumentException ex) {
-                        chart = null;
-                    }
-                    charts.get(count).setChart(chart);
-                    count++;
+                
+                if (line.startsWith("plot ")) {
+                    
+                    plotIndex+=1;
+                    chartSettings = cSettingsList.get(plotIndex);
+                    plot = new XYPlot(null, chartSettings.getXAxis(), chartSettings.getYAxis(), 
+                                        new XYLineAndShapeRenderer());
+                    JFreeChart chart = new JFreeChart(plot);
+                    charts.get(plotIndex).setChart(chart);
                 }
+                
+                else if (line.startsWith("series ")) {
+                    seriesIndex += 1;
+                    String[] args = line.split("<break>");
+                    List<String> dataLines = loadData(fileMap.get(args[1]));
+                    SeriesSettings seriesSettings = sSettings.getSettings(args[2]);
+                    DataAnalytics dataAnalytics = processData(dataLines, 
+                                        seriesSettings.getXColumn(), seriesSettings.getYColumn());
+                    DefaultXYDataset data = new DefaultXYDataset();
+                    data.addSeries(args[2], dataAnalytics.getData());
+                    plot.setDataset(seriesIndex, data);
+                    XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRenderer();
+                    LineProfile profile = seriesSettings.getLineProfile();
+                    renderer.setSeriesPaint(seriesIndex, profile.getLineColor());
+                    renderer.setSeriesStroke(seriesIndex, new BasicStroke(profile.getLineWeight()));
+                }
+                // Try is to prevent it from crashing on invalid ranges.
+                // try {
+                //     // This is to make it look nice on a LogAxis.  It still needs work at low values.
+                //     if (yAxis instanceof LogAxis) {
+                //         // ((LogAxis)yAxis).setSmallestValue(sInfo.min - 0.000000000001);
+                //         ((LogAxis)yAxis).setRange(new Range(sInfo.min, sInfo.max + 4));
+                //     }
+                //     XYPlot plot = new XYPlot(dataset, xAxis, yAxis, renderer);
+                    // Ghosting stuff
+                    // if (ghosting) {
+                    //     for (int i = 0; i < dataset.getSeriesCount(); i++) {
+                    //         Color color = Color.red;
+                    //         renderer.setSeriesPaint(i, color);
+                    //         DefaultXYDataset ghostSet = new DefaultXYDataset();
+                    //         int j = 0;
+                    //         for (double[][] ghostData : ghosts.getQueue(title[i])) {
+                    //             if (j == 0) {
+                    //                 j++;
+                    //                 continue;
+                    //             }
+                    //             ghostSet.addSeries(title[i] + j, ghostData);
+                    //             j++;
+                    //         }
+                    //         plot.setDataset(i + dataset.getSeriesCount(), ghostSet);
+                    //         plot.setRenderer(i + dataset.getSeriesCount(), new XYLineAndShapeRenderer());
+                    //         for (int k = 0; k < j; k++) {
+                    //             color = color.darker();
+                    //             plot.getRendererForDataset(ghostSet).setSeriesPaint(k, color);
+                    //         }
+                    //     }
+                    // }
+                //     chart = new JFreeChart(plot);
+                    
+                // }
+                // catch (IllegalArgumentException ex) {
+                //     chart = null;
+                // }
+                // charts.get(count).setChart(chart);
+                // count++;
             }
-
         } catch (IOException ex) {
             ex.printStackTrace();
         } catch (NullPointerException ex) {
@@ -306,20 +418,21 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
      * A helper method that takes a list of Strings and 2 integers, each 
      * representing what columns of data will represent x and y, and puts them
      * into a 2D array for use with the DefaultXYDataset.
+     * 
      * @param lines your String lines
      * @param x your x column
      * @param y your y column
-     * @return
+     * @return the data in a DataAnalytics object
      */
-    private SeriesInfo processData(List<String> lines, int x, int y) {
+    private DataAnalytics processData(List<String> lines, int x, int y) {
         double[][] data = new double[2][lines.size()];
-        double min = Double.MAX_VALUE;
-        double max = Double.MIN_VALUE;
         try {
             int lineCounter = 0;
             int indexCounter = 0;
             while (lineCounter < lines.size()) {
+                // Split on one or more spaces
                 String[] numbers = lines.get(lineCounter).split(" +");
+                // NAN and INF handling
                 if (numbers[x-1].equals("nan") || numbers[y-1].equals("nan") 
                     || numbers[x-1].equals("-nan") || numbers[y-1].equals("-nan")
                     || numbers[x-1].equals("inf") || numbers[y-1].equals("inf")
@@ -327,24 +440,20 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     lineCounter+=1;
                     continue;
                 }
+                // Grab the values into our array
                 data[0][indexCounter] = Double.parseDouble(numbers[x-1]);
                 double yValue = Double.parseDouble(numbers[y-1]);
-                if (yValue < min && yValue > 0) {
-                    min = yValue;
-                }
-                if (yValue > max) {
-                    max = yValue;
-                }
                 data[1][indexCounter] = yValue;
                 indexCounter+=1;
                 lineCounter+=1;
             }
         }
         catch (ArrayIndexOutOfBoundsException ex) {
+            // Helps to notify the user if they're trying something silly.
             System.out.println("There is no valid column " + x + " or " + y + ".");
             ex.printStackTrace();
         }
-        return new SeriesInfo(data, min, max);
+        return new DataAnalytics(data);
     }
 
     /**
