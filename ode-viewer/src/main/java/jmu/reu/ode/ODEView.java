@@ -24,8 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.BoxLayout;
 import javax.swing.event.ChangeEvent;
@@ -63,7 +61,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
     private Map<String, JSlider> sliders;
     private Map<String, Parameter> parameters;
     private Map<String, LineProfile> profiles;
-    private Map<String, File> fileMap;
+    private Map<String, String> fileMap;
     private MapQueueLimited<String, double[][]> ghosts;
     private SeriesSettingsMap sSettings;
     private String title;
@@ -127,22 +125,23 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
 
         // handle file aliasing
         for (String fileLine : fileList) {
-            List<String> matchList = new ArrayList<String>();
-            Pattern regex = Pattern.compile("[^\\s\"']+|\"[^\"]*\"|'[^']*'");
-            Matcher regexMatcher = regex.matcher(fileLine);
-            while (regexMatcher.find()) {
-                if (regexMatcher.group(1) != null) {
-                    // Add double-quoted string without the quotes
-                    matchList.add(regexMatcher.group(1));
-                } else if (regexMatcher.group(2) != null) {
-                    // Add single-quoted string without the quotes
-                    matchList.add(regexMatcher.group(2));
-                } else {
-                    // Add unquoted string
-                    matchList.add(regexMatcher.group());
-                }
-            }
-            fileMap.put(matchList.get(1), new File(matchList.get(2)));
+            // List<String> matchList = new ArrayList<String>();
+            // Pattern regex = Pattern.compile("([");
+            // Matcher regexMatcher = regex.matcher(fileLine);
+            // while (regexMatcher.find()) {
+            //     if (regexMatcher.group(1) != null) {
+            //         // Add double-quoted string without the quotes
+            //         matchList.add(regexMatcher.group(1));
+            //     } else if (regexMatcher.group(2) != null) {
+            //         // Add single-quoted string without the quotes
+            //         matchList.add(regexMatcher.group(2));
+            //     } else {
+            //         // Add unquoted string
+            //         matchList.add(regexMatcher.group());
+            //     }
+            // }
+            String[] args = fileLine.split(" +");
+            fileMap.put(args[1], args[2]);
         }
 
         // handle profiling
@@ -200,42 +199,28 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             if (plotLine.startsWith("plot ")) {
                 chartSettings = new ChartSettings();
                 // Regex to split on spaces when not in single or double quotes (thanks SOF)
-                List<String> matchList = new ArrayList<String>();
-                Pattern regex = Pattern.compile("[^\\s\"']+|\"[^\"]*\"|'[^']*'");
-                Matcher regexMatcher = regex.matcher(plotLine);
-                while (regexMatcher.find()) {
-                    if (regexMatcher.group(1) != null) {
-                        // Add double-quoted string without the quotes
-                        matchList.add(regexMatcher.group(1));
-                    } else if (regexMatcher.group(2) != null) {
-                        // Add single-quoted string without the quotes
-                        matchList.add(regexMatcher.group(2));
-                    } else {
-                        // Add unquoted string
-                        matchList.add(regexMatcher.group());
-                    }
-                }
+                String[] args = plotLine.split(" +");
                 // Verify correct format.
-                if (!matchList.get(1).equals("xaxis") || !matchList.get(5).equals("yaxis")) {
+                if (!args[1].equals("xaxis") || !args[5].equals("yaxis")) {
                     throw new InvalidConfigFormatException("xaxis and yaxis not specified");
                 }
                 // Set axis types and titles
-                switch(matchList.get(2)) {
+                switch(args[2]) {
                     case "num":
-                        chartSettings.setXAxis(new NumberAxis(matchList.get(4)));
+                        chartSettings.setXAxis(new NumberAxis(args[4]));
                         break;
                     case "log":
-                        chartSettings.setXAxis(new LogAxis(matchList.get(4)));
+                        chartSettings.setXAxis(new LogAxis(args[4]));
                         break;
                     default:
                         throw new InvalidConfigFormatException("Invalid xaxis types specified");
                 }
-                switch(matchList.get(6)) {
+                switch(args[6]) {
                     case "num":
-                        chartSettings.setYAxis(new NumberAxis(matchList.get(8)));
+                        chartSettings.setYAxis(new NumberAxis(args[8]));
                         break;
                     case "log":
-                        chartSettings.setYAxis(new LogAxis(matchList.get(8)));
+                        chartSettings.setYAxis(new LogAxis(args[8]));
                         break;
                     default:
                         throw new InvalidConfigFormatException("Invalid yaxis types specified");
@@ -246,28 +231,13 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             // Put series settings in sSettings map (should make array later) will recode this whole
             // thing later
             else if (plotLine.startsWith("series ")) {
-                List<String> matchList = new ArrayList<String>();
-                Pattern regex = Pattern.compile("[^\\s\"']+|\"[^\"]*\"|'[^']*'");
-                Matcher regexMatcher = regex.matcher(plotLine);
-                while (regexMatcher.find()) {
-                    if (regexMatcher.group(1) != null) {
-                        // Add double-quoted string without the quotes
-                        matchList.add(regexMatcher.group(1));
-                    } else if (regexMatcher.group(2) != null) {
-                        // Add single-quoted string without the quotes
-                        matchList.add(regexMatcher.group(2));
-                    } else {
-                        // Add unquoted string
-                        matchList.add(regexMatcher.group());
-                    }
-                }
-                SeriesSettings settings = sSettings.getSettings(matchList.get(4));
-                settings.setLineProfile(profiles.get(matchList.get(6)));
-                String[] columns = matchList.get(2).split(":");
+                String[] args = plotLine.split(" +");
+                SeriesSettings settings = sSettings.getSettings(args[4]);
+                settings.setLineProfile(profiles.get(args[6]));
+                String[] columns = args[2].split(":");
                 settings.setXColumn(Integer.parseInt(columns[0]));
                 settings.setYColumn(Integer.parseInt(columns[1]));
-                settings.setInputFile(fileMap.get(matchList.get(1)));
-                plotLine = "series<break>" + matchList.get(1) + "<break>" + matchList.get(4);
+                settings.setInputFile(fileMap.get(args[1]));
             }
         }
 
@@ -351,13 +321,15 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 
                 else if (line.startsWith("series ")) {
                     seriesIndex += 1;
-                    String[] args = line.split("<break>");
-                    List<String> dataLines = loadData(fileMap.get(args[1]));
-                    SeriesSettings seriesSettings = sSettings.getSettings(args[2]);
+                    String[] args = line.split(" +");
+                    String filename = args[1];
+                    String title = args[4];
+                    List<String> dataLines = loadData(new File(fileMap.get(filename)));
+                    SeriesSettings seriesSettings = sSettings.getSettings(title);
                     DataAnalytics dataAnalytics = processData(dataLines, 
                                         seriesSettings.getXColumn(), seriesSettings.getYColumn());
                     DefaultXYDataset data = new DefaultXYDataset();
-                    data.addSeries(args[2], dataAnalytics.getData());
+                    data.addSeries(title, dataAnalytics.getData());
                     plot.setDataset(seriesIndex, data);
                     XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRenderer();
                     LineProfile profile = seriesSettings.getLineProfile();

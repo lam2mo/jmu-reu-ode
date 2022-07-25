@@ -15,7 +15,7 @@ public class SeriesSettings {
     private DataAnalytics data;
     private int xColumn;
     private int yColumn;
-    private File dataInput;
+    private String dataInput;
 
     public SeriesSettings() {
         setDefaults();
@@ -119,7 +119,7 @@ public class SeriesSettings {
      * 
      * @param newInputFile the new dataFile
      */
-    public void setInputFile(File newInputFile) {
+    public void setInputFile(String newInputFile) {
         this.dataInput = newInputFile;
     }
 
@@ -128,7 +128,7 @@ public class SeriesSettings {
      * 
      * @return dataInput field
      */
-    public File getInputFile() {
+    public String getInputFile() {
         return dataInput;
     }
 }
