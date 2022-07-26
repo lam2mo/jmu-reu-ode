@@ -65,6 +65,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
     private MapQueueLimited<String, double[][]> ghosts;
     private List<SeriesSettings> sSettings;
     private String title;
+    private String divider = " +";
 
     public ODEView (File configFile) {
         // List of all the image filenames that appear in the file.
@@ -121,6 +122,24 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             ex.printStackTrace();
         } catch (NumberFormatException ex) {
             System.err.println("Invalid parameter: " + line);
+        }
+
+        for (String setLine : setScript) {
+            String[] args = setLine.split(" +");
+            switch (args[1]) {
+                case "filetype":
+                    switch (args[2]) {
+                        case "csv":
+                            divider = ",";
+                            break;
+                        case "dat":
+                            divider = " +";
+                            break;
+                    }
+                    break;
+                default:
+                    throw new InvalidConfigFormatException("Invalid set command format");
+            }
         }
 
         // handle file aliasing
@@ -427,7 +446,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             int indexCounter = 0;
             while (lineCounter < lines.size()) {
                 // Split on one or more spaces
-                String[] numbers = lines.get(lineCounter).split(" +");
+                String[] numbers = lines.get(lineCounter).split(divider);
                 // NAN and INF handling
                 if (numbers[x-1].equals("nan") || numbers[y-1].equals("nan") 
                     || numbers[x-1].equals("-nan") || numbers[y-1].equals("-nan")
