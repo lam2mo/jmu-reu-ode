@@ -63,7 +63,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
     private Map<String, LineProfile> profiles;
     private Map<String, String> fileMap;
     private MapQueueLimited<String, double[][]> ghosts;
-    private SeriesSettingsMap sSettings;
+    private List<SeriesSettings> sSettings;
     private String title;
 
     public ODEView (File configFile) {
@@ -74,7 +74,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
         commands = new ArrayList<String>();
         plotScript = new ArrayList<String>();
         setScript = new ArrayList<String>();
-        sSettings = new SeriesSettingsMap();
+        sSettings = new ArrayList<>();
         profileScript = new ArrayList<String>();
         cSettingsList = new ArrayList<>();
         List<String> fileList = new ArrayList<>();
@@ -194,6 +194,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
 
         // Setup charts & series settings one time at the beginning
         ChartSettings chartSettings;
+        int notitleCount = 0;
         for (String plotLine : plotScript) {
             // a "plot" level command
             if (plotLine.startsWith("plot ")) {
@@ -232,7 +233,17 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             // thing later
             else if (plotLine.startsWith("series ")) {
                 String[] args = plotLine.split(" +");
-                SeriesSettings settings = sSettings.getSettings(args[4]);
+                SeriesSettings settings = new SeriesSettings();
+                sSettings.add(settings);
+                switch (args[4]) {
+                    case "notitle":
+                        settings.setSeriesTitle("notitle" + notitleCount);
+                        break;
+                    default:
+                        settings.setSeriesTitle(args[4]);
+                        break;
+                }
+                
                 settings.setLineProfile(profiles.get(args[6]));
                 String[] columns = args[2].split(":");
                 settings.setXColumn(Integer.parseInt(columns[0]));
@@ -328,26 +339,26 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
 
                     // Load data from file
                     String filename = args[1];
-                    String title = args[4];
                     List<String> dataLines = loadData(new File(fileMap.get(filename)));
 
                     // Process data into usable format
-                    SeriesSettings seriesSettings = sSettings.getSettings(title);
+                    SeriesSettings seriesSettings = sSettings.get(datasetIndex);
                     DataAnalytics dataAnalytics = processData(dataLines, 
                                         seriesSettings.getXColumn(), seriesSettings.getYColumn());
 
                     // Add data to dataset
                     DefaultXYDataset data = new DefaultXYDataset();
-                    data.addSeries(title, dataAnalytics.getData());
+                    data.addSeries(seriesSettings.getSeriesTitle(), dataAnalytics.getData());
                     plot.setDataset(datasetIndex, data);
 
                     // Setup series renderer and chart
                     LineProfile profile = seriesSettings.getLineProfile();
-                    System.out.println(profile.getLineColor().toString());
-                    System.out.println(profile.getLineWeight());
                     
                     defaultRenderer.setSeriesPaint(0, profile.getLineColor());
                     defaultRenderer.setSeriesStroke(0, new BasicStroke(profile.getLineWeight()));
+                    if (seriesSettings.getSeriesTitle().substring(0, 7).equals("notitle")) {
+                        defaultRenderer.setSeriesVisibleInLegend(0, false, true);
+                    }
                 }
                 // Try is to prevent it from crashing on invalid ranges.
                 // try {

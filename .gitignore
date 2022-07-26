@@ -55,3 +55,6 @@ out.png
 
 #vscode
 .vscode
+
+# mvn
+ode-viewer/target/

@@ -1,7 +1,5 @@
 package jmu.reu.ode;
 
-import java.io.File;
-
 /**
  * A class that represents all the info we need to chart a single series. This includes things such
  * as lineColors, data, and data analytics needed for formatting.  You should not be calling 
@@ -16,6 +14,7 @@ public class SeriesSettings {
     private int xColumn;
     private int yColumn;
     private String dataInput;
+    private String seriesTitle;
 
     public SeriesSettings() {
         setDefaults();
@@ -130,5 +129,23 @@ public class SeriesSettings {
      */
     public String getInputFile() {
         return dataInput;
+    }
+
+    /**
+     * Mutator method for seriesTitle field.
+     * 
+     * @param newSeriesTitle the new series title value
+     */
+    public void setSeriesTitle(String newSeriesTitle) {
+        this.seriesTitle = newSeriesTitle;
+    }
+
+    /**
+     * Accessor method for seriesTitle field.
+     * 
+     * @return the seriesTitle field
+     */
+    public String getSeriesTitle() {
+        return seriesTitle;
     }
 }
