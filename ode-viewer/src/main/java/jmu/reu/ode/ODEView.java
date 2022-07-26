@@ -305,36 +305,49 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             // necessary data for plot-level commands
             ChartSettings chartSettings;
             XYPlot plot = null;
+            XYLineAndShapeRenderer defaultRenderer = null;
             int plotIndex = -1;
-            int seriesIndex = -1;
+            int datasetIndex = -1;
             for (String line : plotScript) {
                 
                 if (line.startsWith("plot ")) {
                     
                     plotIndex+=1;
                     chartSettings = cSettingsList.get(plotIndex);
+                    defaultRenderer = new XYLineAndShapeRenderer();
                     plot = new XYPlot(null, chartSettings.getXAxis(), chartSettings.getYAxis(), 
-                                        new XYLineAndShapeRenderer());
+                                        defaultRenderer);
                     JFreeChart chart = new JFreeChart(plot);
                     charts.get(plotIndex).setChart(chart);
                 }
                 
                 else if (line.startsWith("series ")) {
-                    seriesIndex += 1;
+                    datasetIndex += 1;
+                    // Split args
                     String[] args = line.split(" +");
+
+                    // Load data from file
                     String filename = args[1];
                     String title = args[4];
                     List<String> dataLines = loadData(new File(fileMap.get(filename)));
+
+                    // Process data into usable format
                     SeriesSettings seriesSettings = sSettings.getSettings(title);
                     DataAnalytics dataAnalytics = processData(dataLines, 
                                         seriesSettings.getXColumn(), seriesSettings.getYColumn());
+
+                    // Add data to dataset
                     DefaultXYDataset data = new DefaultXYDataset();
                     data.addSeries(title, dataAnalytics.getData());
-                    plot.setDataset(seriesIndex, data);
-                    XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRenderer();
+                    plot.setDataset(datasetIndex, data);
+
+                    // Setup series renderer and chart
                     LineProfile profile = seriesSettings.getLineProfile();
-                    renderer.setSeriesPaint(seriesIndex, profile.getLineColor());
-                    renderer.setSeriesStroke(seriesIndex, new BasicStroke(profile.getLineWeight()));
+                    System.out.println(profile.getLineColor().toString());
+                    System.out.println(profile.getLineWeight());
+                    
+                    defaultRenderer.setSeriesPaint(0, profile.getLineColor());
+                    defaultRenderer.setSeriesStroke(0, new BasicStroke(profile.getLineWeight()));
                 }
                 // Try is to prevent it from crashing on invalid ranges.
                 // try {
