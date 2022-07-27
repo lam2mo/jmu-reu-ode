@@ -455,11 +455,13 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     lineCounter+=1;
                     continue;
                 }
-                // Grab the values into our array
-                data[0][indexCounter] = Double.parseDouble(numbers[x-1]);
-                double yValue = Double.parseDouble(numbers[y-1]);
-                data[1][indexCounter] = yValue;
-                indexCounter+=1;
+                try {
+                    // Grab the values into our array
+                    data[0][indexCounter] = Double.parseDouble(numbers[x-1]);
+                    double yValue = Double.parseDouble(numbers[y-1]);
+                    data[1][indexCounter] = yValue;
+                    indexCounter+=1;
+                } catch (NumberFormatException ex) { /* probably a header line */ }
                 lineCounter+=1;
             }
         }
