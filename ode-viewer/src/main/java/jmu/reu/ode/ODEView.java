@@ -126,9 +126,9 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
 
         for (String setLine : setScript) {
             String[] args = setLine.split(" +");
-            switch (args[1]) {
+            switch (args[0]) {
                 case "filetype":
-                    switch (args[2]) {
+                    switch (args[1]) {
                         case "csv":
                             divider = ",";
                             break;
