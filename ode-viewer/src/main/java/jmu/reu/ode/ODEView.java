@@ -105,6 +105,8 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 } else if (line.startsWith("plot")) {
                     plotScript.add(line);
                     chartNum+=1;
+                } else if (line.startsWith("static series")) {
+                    plotScript.add(line);
                 } else if (line.startsWith("series")) {
                     plotScript.add(line);
                 } else if (line.startsWith("set")) {
@@ -269,6 +271,25 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 settings.setYColumn(Integer.parseInt(columns[1]));
                 settings.setInputFile(fileMap.get(args[1]));
             }
+
+            // static series parsing
+            else if (plotLine.startsWith("static series ")) {
+                String args[] = plotLine.split(" +");
+                
+                // Load in dataset
+                List<String> lines = loadData(new File(fileMap.get(args[2])));
+                String numbers[] = args[3].split(":");
+                DataAnalytics data = processData(lines, Integer.parseInt(numbers[0]), 
+                                                                    Integer.parseInt(numbers[1]));
+
+                // Load in settings
+                SeriesSettings seriesSettings = new SeriesSettings(data);
+                seriesSettings.setLineProfile(profiles.get(args[7]));
+                seriesSettings.setSeriesTitle(args[5]);
+
+                // Add series settings to list
+                sSettings.add(seriesSettings);
+            }
         }
 
         // slider panel consists of a stack of labels and sliders
@@ -344,7 +365,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     
                     plotIndex+=1;
                     chartSettings = cSettingsList.get(plotIndex);
-                    defaultRenderer = new XYLineAndShapeRenderer();
+                    defaultRenderer = new XYLineAndShapeRenderer(true, false);
                     plot = new XYPlot(null, chartSettings.getXAxis(), chartSettings.getYAxis(), 
                                         defaultRenderer);
                     JFreeChart chart = new JFreeChart(plot);
@@ -373,6 +394,29 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     // Setup series renderer and chart
                     LineProfile profile = seriesSettings.getLineProfile();
                     
+                    defaultRenderer.setSeriesPaint(0, profile.getLineColor());
+                    defaultRenderer.setSeriesStroke(0, new BasicStroke(profile.getLineWeight()));
+                    if (seriesSettings.getSeriesTitle().substring(0, 7).equals("notitle")) {
+                        defaultRenderer.setSeriesVisibleInLegend(0, false, true);
+                    }
+                }
+
+                else if (line.startsWith("static series ")) {
+                    datasetIndex+=1;
+
+                    // Split args
+                    SeriesSettings seriesSettings = sSettings.get(datasetIndex);
+
+                    // Make dataset
+                    DefaultXYDataset data = new DefaultXYDataset();
+                    data.addSeries(seriesSettings.getSeriesTitle(), 
+                                                                seriesSettings.getData().getData());
+                    
+                    // add dataset to plot
+                    plot.setDataset(datasetIndex, data);
+
+                    // set profile
+                    LineProfile profile = seriesSettings.getLineProfile();
                     defaultRenderer.setSeriesPaint(0, profile.getLineColor());
                     defaultRenderer.setSeriesStroke(0, new BasicStroke(profile.getLineWeight()));
                     if (seriesSettings.getSeriesTitle().substring(0, 7).equals("notitle")) {
@@ -447,6 +491,11 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             while (lineCounter < lines.size()) {
                 // Split on one or more spaces
                 String[] numbers = lines.get(lineCounter).split(divider);
+
+                if (numbers.length <= 1) {
+                    lineCounter+=1;
+                    continue;
+                }
                 // NAN and INF handling
                 if (numbers[x-1].equals("nan") || numbers[y-1].equals("nan") 
                     || numbers[x-1].equals("-nan") || numbers[y-1].equals("-nan")
