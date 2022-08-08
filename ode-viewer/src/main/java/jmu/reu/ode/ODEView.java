@@ -357,6 +357,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             ChartSettings chartSettings;
             XYPlot plot = null;
             XYLineAndShapeRenderer defaultRenderer = null;
+            DefaultXYDataset data = null;
             int plotIndex = -1;
             int datasetIndex = -1;
             for (String line : plotScript) {
@@ -364,10 +365,13 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 if (line.startsWith("plot ")) {
                     
                     plotIndex+=1;
+                    datasetIndex = -1;
                     chartSettings = cSettingsList.get(plotIndex);
                     defaultRenderer = new XYLineAndShapeRenderer(true, false);
                     plot = new XYPlot(null, chartSettings.getXAxis(), chartSettings.getYAxis(), 
                                         defaultRenderer);
+                    data = new DefaultXYDataset();
+                    plot.setDataset(data);
                     JFreeChart chart = new JFreeChart(plot);
                     charts.get(plotIndex).setChart(chart);
                 }
@@ -387,17 +391,16 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                                         seriesSettings.getXColumn(), seriesSettings.getYColumn());
 
                     // Add data to dataset
-                    DefaultXYDataset data = new DefaultXYDataset();
                     data.addSeries(seriesSettings.getSeriesTitle(), dataAnalytics.getData());
-                    plot.setDataset(datasetIndex, data);
 
                     // Setup series renderer and chart
                     LineProfile profile = seriesSettings.getLineProfile();
                     
-                    defaultRenderer.setSeriesPaint(0, profile.getLineColor());
-                    defaultRenderer.setSeriesStroke(0, new BasicStroke(profile.getLineWeight()));
+                    defaultRenderer.setSeriesPaint(datasetIndex, profile.getLineColor());
+                    defaultRenderer.setSeriesStroke(datasetIndex, 
+                                                    new BasicStroke(profile.getLineWeight()));
                     if (seriesSettings.getSeriesTitle().substring(0, 7).equals("notitle")) {
-                        defaultRenderer.setSeriesVisibleInLegend(0, false, true);
+                        defaultRenderer.setSeriesVisibleInLegend(datasetIndex, false, true);
                     }
                 }
 
@@ -408,7 +411,6 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     SeriesSettings seriesSettings = sSettings.get(datasetIndex);
 
                     // Make dataset
-                    DefaultXYDataset data = new DefaultXYDataset();
                     data.addSeries(seriesSettings.getSeriesTitle(), 
                                                                 seriesSettings.getData().getData());
                     
@@ -417,10 +419,11 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
 
                     // set profile
                     LineProfile profile = seriesSettings.getLineProfile();
-                    defaultRenderer.setSeriesPaint(0, profile.getLineColor());
-                    defaultRenderer.setSeriesStroke(0, new BasicStroke(profile.getLineWeight()));
+                    defaultRenderer.setSeriesPaint(datasetIndex, profile.getLineColor());
+                    defaultRenderer.setSeriesStroke(datasetIndex, 
+                                                    new BasicStroke(profile.getLineWeight()));
                     if (seriesSettings.getSeriesTitle().substring(0, 7).equals("notitle")) {
-                        defaultRenderer.setSeriesVisibleInLegend(0, false, true);
+                        defaultRenderer.setSeriesVisibleInLegend(datasetIndex, false, true);
                     }
                 }
                 // Try is to prevent it from crashing on invalid ranges.
