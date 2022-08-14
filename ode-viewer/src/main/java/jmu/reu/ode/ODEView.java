@@ -35,8 +35,10 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.LogAxis;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.ui.Layer;
 import org.jfree.data.xy.DefaultXYDataset;
 
 import javax.swing.JLabel;
@@ -64,6 +66,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
     private Map<String, String> fileMap;
     private MapQueueLimited<String, double[][]> ghosts;
     private List<SeriesSettings> sSettings;
+    private List<MarkSettings> mSettings;
     private String title;
     private String divider = " +";
 
@@ -76,6 +79,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
         plotScript = new ArrayList<String>();
         setScript = new ArrayList<String>();
         sSettings = new ArrayList<>();
+        mSettings = new ArrayList<>();
         profileScript = new ArrayList<String>();
         cSettingsList = new ArrayList<>();
         List<String> fileList = new ArrayList<>();
@@ -203,8 +207,10 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     break;
                 case "dashed":
                     profile.setStroke(new BasicStroke(weight, BasicStroke.CAP_SQUARE, 
-                                        BasicStroke.JOIN_MITER, (float)10.0, new float[]{9}, 0));
+                                        BasicStroke.JOIN_BEVEL, (float)0, new float[]{0.5f, 10}, 0));
                     break;
+                default:
+                    throw new InvalidConfigFormatException("Invalid linetype specified");
             }
             profiles.put(args[1], profile);
         }
@@ -304,6 +310,39 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 // Add series settings to list
                 sSettings.add(seriesSettings);
             }
+
+            // mark parsing
+            else if (plotLine.startsWith("mark ")) {
+                String args[] = plotLine.split(" +");
+                MarkSettings mOptions = new MarkSettings();
+
+                switch(args[1]) {
+                    case "x":
+                        mOptions.setDomain(true);
+                        break;
+                    case "y":
+                        mOptions.setDomain(false);
+                        break;
+                    default:
+                        throw new InvalidConfigFormatException("Invalid mark x/y option");
+                }
+
+                mOptions.setValue(Double.parseDouble(args[2]));
+
+                switch (args[3]) {
+                    case "foreground":
+                        mOptions.setForeground(true);
+                        break;
+                    case "background":
+                        mOptions.setForeground(false);
+                        break;
+                    default:
+                        throw new InvalidConfigFormatException("Invalid mark foreground/background option");
+                }
+
+                mOptions.setProfile(profiles.get(args[5]));
+                mSettings.add(mOptions);
+            }
         }
 
         // slider panel consists of a stack of labels and sliders
@@ -375,6 +414,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             int plotIndex = -1;
             int listIndex = -1;
             int datasetIndex = -1;
+            int markIndex = -1;
             for (String line : plotScript) {
                 
                 if (line.startsWith("plot ")) {
@@ -446,6 +486,28 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     if (seriesSettings.getSeriesTitle().length() > 7 && 
                                 seriesSettings.getSeriesTitle().substring(0, 7).equals("notitle")) {
                         defaultRenderer.setSeriesVisibleInLegend(datasetIndex, false, true);
+                    }
+                }
+                
+                else if (line.startsWith("mark ")) {
+                    markIndex += 1;
+                    MarkSettings mOptions = mSettings.get(markIndex);
+
+                    LineProfile profile = mOptions.getProfile();
+                    Layer layer = null;
+                    if (mOptions.getForeground()) {
+                        layer = Layer.FOREGROUND;
+                    }
+                    else {
+                        layer = Layer.BACKGROUND;
+                    }
+                    if (mOptions.getDomain()) {
+                        plot.addDomainMarker(new ValueMarker(mOptions.getValue(), 
+                            profile.getLineColor(), profile.getStroke()), layer);
+                    }
+                    else {
+                        plot.addRangeMarker(new ValueMarker(mOptions.getValue(), 
+                            profile.getLineColor(), profile.getStroke()), layer);
                     }
                 }
                 // Try is to prevent it from crashing on invalid ranges.
