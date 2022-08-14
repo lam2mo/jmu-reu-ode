@@ -259,6 +259,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 switch (args[4]) {
                     case "notitle":
                         settings.setSeriesTitle("notitle" + notitleCount);
+                        notitleCount+=1;
                         break;
                     default:
                         settings.setSeriesTitle(args[4]);
@@ -359,12 +360,14 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             XYLineAndShapeRenderer defaultRenderer = null;
             DefaultXYDataset data = null;
             int plotIndex = -1;
+            int listIndex = -1;
             int datasetIndex = -1;
             for (String line : plotScript) {
                 
                 if (line.startsWith("plot ")) {
                     
                     plotIndex+=1;
+                    System.out.println("Plotting plot: " + plotIndex);
                     datasetIndex = -1;
                     chartSettings = cSettingsList.get(plotIndex);
                     defaultRenderer = new XYLineAndShapeRenderer(true, false);
@@ -377,8 +380,10 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 }
                 
                 else if (line.startsWith("series ")) {
+                    listIndex += 1;
                     datasetIndex += 1;
                     // Split args
+                    
                     String[] args = line.split(" +");
 
                     // Load data from file
@@ -386,7 +391,8 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     List<String> dataLines = loadData(new File(fileMap.get(filename)));
 
                     // Process data into usable format
-                    SeriesSettings seriesSettings = sSettings.get(datasetIndex);
+                    SeriesSettings seriesSettings = sSettings.get(listIndex);
+                    System.out.println("Plotting series " + datasetIndex + " titled " + seriesSettings.getSeriesTitle() + " on plot " + plotIndex);
                     DataAnalytics dataAnalytics = processData(dataLines, 
                                         seriesSettings.getXColumn(), seriesSettings.getYColumn());
 
@@ -399,16 +405,20 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     defaultRenderer.setSeriesPaint(datasetIndex, profile.getLineColor());
                     defaultRenderer.setSeriesStroke(datasetIndex, 
                                                     new BasicStroke(profile.getLineWeight()));
-                    if (seriesSettings.getSeriesTitle().substring(0, 7).equals("notitle")) {
+                    if (seriesSettings.getSeriesTitle().length() > 7 && 
+                                seriesSettings.getSeriesTitle().substring(0, 7).equals("notitle")) {
                         defaultRenderer.setSeriesVisibleInLegend(datasetIndex, false, true);
                     }
                 }
 
                 else if (line.startsWith("static series ")) {
                     datasetIndex+=1;
+                    listIndex+=1;
 
                     // Split args
-                    SeriesSettings seriesSettings = sSettings.get(datasetIndex);
+                    SeriesSettings seriesSettings = sSettings.get(listIndex);
+                    System.out.println("Plotting static series " + datasetIndex + " titled " + 
+                                        seriesSettings.getSeriesTitle() + " on plot " + plotIndex);
 
                     // Make dataset
                     data.addSeries(seriesSettings.getSeriesTitle(), 
@@ -422,7 +432,8 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     defaultRenderer.setSeriesPaint(datasetIndex, profile.getLineColor());
                     defaultRenderer.setSeriesStroke(datasetIndex, 
                                                     new BasicStroke(profile.getLineWeight()));
-                    if (seriesSettings.getSeriesTitle().substring(0, 7).equals("notitle")) {
+                    if (seriesSettings.getSeriesTitle().length() > 7 && 
+                                seriesSettings.getSeriesTitle().substring(0, 7).equals("notitle")) {
                         defaultRenderer.setSeriesVisibleInLegend(datasetIndex, false, true);
                     }
                 }
