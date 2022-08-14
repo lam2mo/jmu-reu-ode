@@ -109,6 +109,8 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     plotScript.add(line);
                 } else if (line.startsWith("series")) {
                     plotScript.add(line);
+                } else if (line.startsWith("mark")) {
+                    plotScript.add(line);
                 } else if (line.startsWith("set")) {
                     setScript.add(line.replaceFirst("set ", ""));
                 } else if (line.startsWith("profile")) {
@@ -169,6 +171,8 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
         for (String profileLine : profileScript) {
             String[] args = profileLine.split(" +");
             LineProfile profile = new LineProfile();
+            
+            // handle color
             switch (args[2]) {
                 case "hex":
                     profile.setLineColor(args[3]);
@@ -181,17 +185,26 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 default:
                     throw new InvalidConfigFormatException("Invalid color format in profiling");
             }
-            if (args[4] != null) {
-                if (args[4].equals("weight")) {
-                    if (args[5] == null) {
-                        throw new InvalidConfigFormatException("No profile weight value specified");
-                    }
-                    float weight = Float.parseFloat(args[5]);
-                    profile.setLineWeight(weight);
+            
+            // handle stroke
+            float weight;
+            if (args[4].equals("weight")) {
+                if (args[5] == null) {
+                    throw new InvalidConfigFormatException("No profile weight value specified");
                 }
-                else {
-                    throw new InvalidConfigFormatException("Invalid profile statement format");
-                }
+                weight = Float.parseFloat(args[5]);
+            }
+            else {
+                throw new InvalidConfigFormatException("Invalid profile statement format");
+            }
+            switch (args[6]) {
+                case "solid":
+                    profile.setStroke(new BasicStroke(weight));
+                    break;
+                case "dashed":
+                    profile.setStroke(new BasicStroke(weight, BasicStroke.CAP_SQUARE, 
+                                        BasicStroke.JOIN_MITER, (float)10.0, new float[]{9}, 0));
+                    break;
             }
             profiles.put(args[1], profile);
         }
@@ -403,8 +416,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     LineProfile profile = seriesSettings.getLineProfile();
                     
                     defaultRenderer.setSeriesPaint(datasetIndex, profile.getLineColor());
-                    defaultRenderer.setSeriesStroke(datasetIndex, 
-                                                    new BasicStroke(profile.getLineWeight()));
+                    defaultRenderer.setSeriesStroke(datasetIndex, profile.getStroke());
                     if (seriesSettings.getSeriesTitle().length() > 7 && 
                                 seriesSettings.getSeriesTitle().substring(0, 7).equals("notitle")) {
                         defaultRenderer.setSeriesVisibleInLegend(datasetIndex, false, true);
@@ -430,8 +442,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     // set profile
                     LineProfile profile = seriesSettings.getLineProfile();
                     defaultRenderer.setSeriesPaint(datasetIndex, profile.getLineColor());
-                    defaultRenderer.setSeriesStroke(datasetIndex, 
-                                                    new BasicStroke(profile.getLineWeight()));
+                    defaultRenderer.setSeriesStroke(datasetIndex, profile.getStroke());
                     if (seriesSettings.getSeriesTitle().length() > 7 && 
                                 seriesSettings.getSeriesTitle().substring(0, 7).equals("notitle")) {
                         defaultRenderer.setSeriesVisibleInLegend(datasetIndex, false, true);

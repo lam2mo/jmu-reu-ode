@@ -1,6 +1,7 @@
 package jmu.reu.ode;
 
 import java.awt.Color;
+import java.awt.BasicStroke;
 
 /**
  * A class that encapsulates settings for lines in our charts.  It contains data such as color, 
@@ -11,14 +12,14 @@ import java.awt.Color;
  */
 public class LineProfile {
     private Color lineColor; // RED
-    private float lineWeight; // 1
+    private BasicStroke stroke;
 
     /**
      * Default constructor for LineProfile, initiating the values to their defaults.
      */
     public LineProfile() {
+        stroke = new BasicStroke(1);
         lineColor = Color.RED;
-        lineWeight = 1;
     }
 
     /**
@@ -27,9 +28,9 @@ public class LineProfile {
      * @param lineColor the lineColor of this profile
      * @param lineWeight the lineWeight of this profile
      */
-    public LineProfile(Color lineColor, float lineWeight) {
+    public LineProfile(Color lineColor, BasicStroke stroke) {
         this.lineColor = lineColor;
-        this.lineWeight = lineWeight;
+        this.stroke = stroke;
     }
 
     /**
@@ -39,15 +40,6 @@ public class LineProfile {
      */
     public Color getLineColor() {
         return lineColor;
-    }
-
-    /**
-     * Accessor method for lineWeight.
-     * 
-     * @return the lineWeight
-     */
-    public float getLineWeight() {
-        return lineWeight;
     }
 
     /**
@@ -72,11 +64,20 @@ public class LineProfile {
     }
 
     /**
-     * Mutator method for lineWeight.
+     * Accessor method for stroke
      * 
-     * @param newWeight the new weight value for the lineWeight attribute
+     * @return stroke
      */
-    public void setLineWeight(float newWeight) {
-        this.lineWeight = newWeight;
+    public BasicStroke getStroke() {
+        return stroke;
+    }
+
+    /**
+     * Mutator method for stroke
+     * 
+     * @param stroke the new stroke value
+     */
+    public void setStroke(BasicStroke stroke) {
+        this.stroke = stroke;
     }
 }
