@@ -572,9 +572,11 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
      */
     private DataAnalytics processData(List<String> lines, int x, int y) {
         double[][] data = new double[2][lines.size()];
+        int lineCounter = 0;    
+        int indexCounter = 0;
+        double[][] shortenedData = null;
         try {
-            int lineCounter = 0;
-            int indexCounter = 0;
+            
             while (lineCounter < lines.size()) {
                 // Split on one or more spaces
                 String[] numbers = lines.get(lineCounter).split(divider);
@@ -593,12 +595,22 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 }
                 try {
                     // Grab the values into our array
-                    data[0][indexCounter] = Double.parseDouble(numbers[x-1]);
                     double yValue = Double.parseDouble(numbers[y-1]);
+                    double xValue = Double.parseDouble(numbers[x-1]);
+                    data[0][indexCounter] = xValue;
+                    
                     data[1][indexCounter] = yValue;
                     indexCounter+=1;
                 } catch (NumberFormatException ex) { /* probably a header line */ }
                 lineCounter+=1;
+            }
+            shortenedData = new double[2][indexCounter];
+
+            for (int i = 0; i < indexCounter; i++) {
+                shortenedData[0][i] = data[0][i];
+            }
+            for (int i = 0; i < indexCounter; i++) {
+                shortenedData[1][i] = data[1][i];
             }
         }
         catch (ArrayIndexOutOfBoundsException ex) {
@@ -606,7 +618,8 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             System.out.println("There is no valid column " + x + " or " + y + ".");
             ex.printStackTrace();
         }
-        return new DataAnalytics(data);
+        
+        return new DataAnalytics(shortenedData);
     }
 
     /**
