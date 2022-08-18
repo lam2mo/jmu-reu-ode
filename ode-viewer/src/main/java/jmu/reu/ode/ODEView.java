@@ -63,7 +63,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
     private Map<String, JSlider> sliders;
     private Map<String, Parameter> parameters;
     private Map<String, LineProfile> profiles;
-    private Map<String, String> fileMap;
+    private Map<String, FileSettings> fileMap;
     private MapQueueLimited<String, double[][]> ghosts;
     private List<SeriesSettings> sSettings;
     private List<MarkSettings> mSettings;
@@ -168,7 +168,14 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
             //     }
             // }
             String[] args = fileLine.split(" +");
-            fileMap.put(args[1], args[2]);
+            FileSettings fileSettings = new FileSettings(args[2]);
+            if (args.length == 5) {
+                if (!args[3].equals("skip")) {
+                    throw new InvalidConfigFormatException("Invalid file line format");
+                }
+                fileSettings.setFileSkip(Integer.parseInt(args[4]));
+            }
+            fileMap.put(args[1], fileSettings);
         }
 
         // handle profiling
@@ -289,7 +296,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 String[] columns = args[2].split(":");
                 settings.setXColumn(Integer.parseInt(columns[0]));
                 settings.setYColumn(Integer.parseInt(columns[1]));
-                settings.setInputFile(fileMap.get(args[1]));
+                settings.setInputFile(fileMap.get(args[1]).getFileName());
             }
 
             // static series parsing
@@ -297,7 +304,9 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 String args[] = plotLine.split(" +");
                 
                 // Load in dataset
-                List<String> lines = loadData(new File(fileMap.get(args[2])));
+                FileSettings fileSettings = fileMap.get(args[2]);
+                List<String> lines = loadData(new File(fileSettings.getFileName()),
+                                              fileSettings.getFileSkip());
                 String numbers[] = args[3].split(":");
                 DataAnalytics data = processData(lines, Integer.parseInt(numbers[0]), 
                                                                     Integer.parseInt(numbers[1]));
@@ -420,7 +429,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                 if (line.startsWith("plot ")) {
                     
                     plotIndex+=1;
-                    System.out.println("Plotting plot: " + plotIndex);
+                    // System.out.println("Plotting plot: " + plotIndex);
                     datasetIndex = -1;
                     chartSettings = cSettingsList.get(plotIndex);
                     defaultRenderer = new XYLineAndShapeRenderer(true, false);
@@ -441,11 +450,13 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
 
                     // Load data from file
                     String filename = args[1];
-                    List<String> dataLines = loadData(new File(fileMap.get(filename)));
+                    FileSettings fileSettings = fileMap.get(filename);
+                    List<String> dataLines = loadData(new File(fileSettings.getFileName()),
+                                                      fileSettings.getFileSkip());
 
                     // Process data into usable format
                     SeriesSettings seriesSettings = sSettings.get(listIndex);
-                    System.out.println("Plotting series " + datasetIndex + " titled " + seriesSettings.getSeriesTitle() + " on plot " + plotIndex);
+                    // System.out.println("Plotting series " + datasetIndex + " titled " + seriesSettings.getSeriesTitle() + " on plot " + plotIndex);
                     DataAnalytics dataAnalytics = processData(dataLines, 
                                         seriesSettings.getXColumn(), seriesSettings.getYColumn());
 
@@ -469,15 +480,12 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
 
                     // Split args
                     SeriesSettings seriesSettings = sSettings.get(listIndex);
-                    System.out.println("Plotting static series " + datasetIndex + " titled " + 
-                                        seriesSettings.getSeriesTitle() + " on plot " + plotIndex);
+                    // System.out.println("Plotting static series " + datasetIndex + " titled " + 
+                                        // seriesSettings.getSeriesTitle() + " on plot " + plotIndex);
 
                     // Make dataset
                     data.addSeries(seriesSettings.getSeriesTitle(), 
                                                                 seriesSettings.getData().getData());
-                    
-                    // add dataset to plot
-                    plot.setDataset(datasetIndex, data);
 
                     // set profile
                     LineProfile profile = seriesSettings.getLineProfile();
@@ -627,13 +635,18 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
      * @param file the file to load data from
      * @return the lines of the file as an arrayList
      */
-    private ArrayList<String> loadData(File file) {
+    private ArrayList<String> loadData(File file, int fileSkip) {
         ArrayList<String> lines = new ArrayList<String>();
         try {
             BufferedReader reader = new BufferedReader(new FileReader(file));
             String line;
+            int counter = fileSkip;
             while ((line = reader.readLine()) != null) {
-                lines.add(line.trim());
+                if (counter == fileSkip) {
+                    lines.add(line.trim());
+                    counter = 0;
+                }
+                counter += 1;
             }
             reader.close();
         } catch (FileNotFoundException ex) {
