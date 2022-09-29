@@ -12,6 +12,8 @@ import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.GridLayout;
 import java.io.BufferedReader;
 import java.io.File;
@@ -26,6 +28,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import javax.swing.BoxLayout;
+import javax.swing.JCheckBox;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -47,7 +50,7 @@ import javax.swing.JSlider;
 import javax.swing.JTextField;
 
 
-public class ODEView extends JPanel implements ChangeListener, DocumentListener {
+public class ODEView extends JPanel implements ChangeListener, DocumentListener, ActionListener {
     private final double PARAM_FACTOR = 100.0;
     private boolean ghosting = false;
     private boolean updating = false;
@@ -69,6 +72,8 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
     private List<MarkSettings> mSettings;
     private String title;
     private String divider = " +";
+
+    private boolean linespoints = false;
 
     public ODEView (File configFile) {
         // List of all the image filenames that appear in the file.
@@ -358,6 +363,9 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
         JPanel sliderPanel = new JPanel();
         sliderPanel.setLayout(new BoxLayout(sliderPanel, BoxLayout.PAGE_AXIS));
         sliderPanel.add(description);
+        JCheckBox pointsCheckBox = new JCheckBox("Points?");
+        pointsCheckBox.addActionListener(this);
+        sliderPanel.add(pointsCheckBox);
         fields = new TreeMap<String, JTextField>();
         sliders = new TreeMap<String, JSlider>();
         for (Parameter p : orderedParameters) {
@@ -432,7 +440,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
                     // System.out.println("Plotting plot: " + plotIndex);
                     datasetIndex = -1;
                     chartSettings = cSettingsList.get(plotIndex);
-                    defaultRenderer = new XYLineAndShapeRenderer(true, false);
+                    defaultRenderer = new XYLineAndShapeRenderer(true, linespoints);
                     plot = new XYPlot(null, chartSettings.getXAxis(), chartSettings.getYAxis(), 
                                         defaultRenderer);
                     data = new DefaultXYDataset();
@@ -715,5 +723,15 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener 
         }
         updatePlot();
         updating = false;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent arg0) {
+        String source = arg0.getActionCommand();
+        if (source.equals("Points?")) {
+            linespoints = !linespoints;
+            updatePlot();
+        }
+        
     }
 }
