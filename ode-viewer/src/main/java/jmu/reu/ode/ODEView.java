@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ButtonModel;
 import javax.swing.JCheckBox;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -46,6 +48,7 @@ import org.jfree.data.xy.DefaultXYDataset;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 
@@ -62,7 +65,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
     private List<String> plotScript;
     private List<String> profileScript;
     private List<String> setScript;
-    private Map<String, JTextField> fields;
+    private Map<String, Object> fields;
     private Map<String, JSlider> sliders;
     private Map<String, Parameter> parameters;
     private Map<String, LineProfile> profiles;
@@ -102,12 +105,22 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
                     description.setText(line.replaceFirst("description ", ""));
                 } else if (line.startsWith("parameter")) {
                     String[] args = line.split("\\s+");
-                    Parameter p = new Parameter(args[1],
+                    NumericParameter p = new NumericParameter(args[1],
                                 Double.parseDouble(args[2]),
                                 Double.parseDouble(args[3]),
                                 Double.parseDouble(args[4]),
                                 Double.parseDouble(args[5]));
-                    parameters.put(p.label, p);
+                    parameters.put(p.getLabel(), p);
+                    orderedParameters.add(p);
+                } else if (line.startsWith("choice")) {
+                    String[] args = line.split("\\s+");
+                    // copy everything after index 0 into choices array
+                    String[] choices = new String[args.length - 2];
+                    for (int i = 0; i < choices.length; i++) {
+                        choices[i] = args[i+2];
+                    }
+                    ChoiceParameter p = new ChoiceParameter(args[1], choices);
+                    parameters.put(p.getLabel(), p);
                     orderedParameters.add(p);
                 } else if (line.startsWith("run")) {
                     commands.add(line.replaceFirst("run ", ""));
@@ -366,29 +379,59 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
         JCheckBox pointsCheckBox = new JCheckBox("Points?");
         pointsCheckBox.addActionListener(this);
         sliderPanel.add(pointsCheckBox);
-        fields = new TreeMap<String, JTextField>();
+        fields = new TreeMap<String, Object>();
         sliders = new TreeMap<String, JSlider>();
         for (Parameter p : orderedParameters) {
             JPanel lblPanel = new JPanel();
             lblPanel.setLayout(new BoxLayout(lblPanel, BoxLayout.LINE_AXIS));
-            JLabel lbl = new JLabel("   " + p.label + " = ");
-            JTextField field = new JTextField("" + p.def, 5);
-            field.getDocument().addDocumentListener(this);
-            fields.put(p.label, field);
-            lblPanel.add(lbl);
-            lblPanel.add(field);
-            JPanel tmpPanel = new JPanel();
-            tmpPanel.setLayout(new BorderLayout());
-            JSnapSlider slider = new JSnapSlider(
-                    (int)(p.min * PARAM_FACTOR),
-                    (int)(p.max * PARAM_FACTOR),
-                    (int)(p.def * PARAM_FACTOR),
-                    (int)(p.snap * PARAM_FACTOR));
-            slider.addChangeListener(this);
-            sliders.put(p.label, slider);
-            tmpPanel.add(lblPanel, BorderLayout.WEST);
-            tmpPanel.add(slider, BorderLayout.CENTER);
-            sliderPanel.add(tmpPanel);
+            JLabel lbl = new JLabel("   " + p.getLabel() + " = ");
+            if (p instanceof NumericParameter) {
+                NumericParameter numParam = (NumericParameter) p;
+                JTextField field = new JTextField("" + numParam.def, 5);
+                field.getDocument().addDocumentListener(this);
+                fields.put(p.getLabel(), field);
+                lblPanel.add(lbl);
+                lblPanel.add(field);
+                JPanel tmpPanel = new JPanel();
+                tmpPanel.setLayout(new BorderLayout());
+                JSnapSlider slider = new JSnapSlider(
+                        (int)(numParam.min * PARAM_FACTOR),
+                        (int)(numParam.max * PARAM_FACTOR),
+                        (int)(numParam.def * PARAM_FACTOR),
+                        (int)(numParam.snap * PARAM_FACTOR));
+                slider.addChangeListener(this);
+                sliders.put(p.getLabel(), slider);
+                tmpPanel.add(lblPanel, BorderLayout.WEST);
+                tmpPanel.add(slider, BorderLayout.CENTER);
+                sliderPanel.add(tmpPanel);
+            }
+            if (p instanceof ChoiceParameter) {
+                ChoiceParameter cParam = (ChoiceParameter) p;
+                JLabel selected = new JLabel(cParam.options[0]);
+                lblPanel.add(lbl);
+                lblPanel.add(selected);
+                JPanel tmpPanel = new JPanel();
+                tmpPanel.setLayout(new BorderLayout());
+                ButtonGroup group = new ButtonGroup();
+                JPanel choicesPanel = new JPanel();
+                choicesPanel.setLayout(new GridLayout(1, cParam.options.length));
+                int i = 0;
+                for (String choice : cParam.options) {
+                    JRadioButton button = new JRadioButton(choice);
+                    button.setActionCommand(cParam.options[i]);
+                    if (i == 0) { // set initial option to selected
+                        button.setSelected(true);
+                    }
+                    button.addChangeListener(this);
+                    group.add(button);
+                    choicesPanel.add(button);
+                    i++;
+                }
+                fields.put(cParam.getLabel(), group.getSelection());
+                tmpPanel.add(lblPanel, BorderLayout.WEST);
+                tmpPanel.add(choicesPanel, BorderLayout.CENTER);
+                sliderPanel.add(tmpPanel);
+            }
         }
 
         // main window consists of image panel and slider panel
@@ -410,7 +453,13 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
             for (String cmd : commands) {
                 // cmd = cmd.replaceAll("./", configFileLocation + "/");
                 for (Parameter p : parameters.values()) {
-                    cmd = cmd.replaceAll("\\$"+p.label, ""+p.value);
+                    if (p instanceof NumericParameter) {
+                        NumericParameter numParam = (NumericParameter) p;
+                        cmd = cmd.replaceAll("\\$"+ numParam.getLabel(), "" + numParam.value);
+                    } else if (p instanceof ChoiceParameter) {
+                        ChoiceParameter cParam = (ChoiceParameter) p;
+                        cmd = cmd.replaceAll("\\$" + cParam.getLabel(), "" + cParam.selected);
+                    }
                 }
                 Process process = Runtime.getRuntime().exec(cmd.toString());
                 BufferedReader reader = new BufferedReader(
@@ -697,9 +746,18 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
         updating = true;
         try {
             for (Parameter p : parameters.values()) {
-                double value = Double.parseDouble(fields.get(p.label).getText());
-                p.value = value;
-                sliders.get(p.label).setValue((int)(value * PARAM_FACTOR));
+                if (p instanceof NumericParameter) {
+                    NumericParameter numParam = (NumericParameter) p;
+                    double value = Double.parseDouble(((JTextField) fields.get(numParam.getLabel())).getText());
+                    numParam.value = value;
+                    sliders.get(numParam.getLabel()).setValue((int)(value * PARAM_FACTOR));
+                }
+                else if (p instanceof ChoiceParameter) {
+                    ChoiceParameter cParam = (ChoiceParameter) p;
+                    ButtonModel selected = (ButtonModel) fields.get(cParam.getLabel());
+                    String text = selected.getActionCommand();
+                    cParam.selected = text;
+                }
             }
             updatePlot();
         } catch (NumberFormatException ex) {
@@ -717,9 +775,19 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
         if (updating) return;
         updating = true;
         for (Parameter p : parameters.values()) {
-            double value = (double)(sliders.get(p.label).getValue()) / PARAM_FACTOR;
-            p.value = value;
-            fields.get(p.label).setText("" + value);
+            if (p instanceof NumericParameter) {
+                NumericParameter numParam = (NumericParameter) p;
+                double value = (double)(sliders.get(numParam.getLabel()).getValue()) / PARAM_FACTOR;
+                numParam.value = value;
+
+                ((JTextField) fields.get(numParam.getLabel())).setText("" + value);
+            }
+            else if (p instanceof ChoiceParameter) {
+                ChoiceParameter cParam = (ChoiceParameter) p;
+                ButtonModel selected = (ButtonModel) fields.get(cParam.getLabel());
+                String text = selected.getActionCommand();
+                cParam.selected = text;
+            }
         }
         updatePlot();
         updating = false;
