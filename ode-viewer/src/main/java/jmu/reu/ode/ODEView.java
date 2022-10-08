@@ -427,7 +427,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
                     choicesPanel.add(button);
                     i++;
                 }
-                fields.put(cParam.getLabel(), group.getSelection());
+                fields.put(cParam.getLabel(), group);
                 tmpPanel.add(lblPanel, BorderLayout.WEST);
                 tmpPanel.add(choicesPanel, BorderLayout.CENTER);
                 sliderPanel.add(tmpPanel);
@@ -754,7 +754,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
                 }
                 else if (p instanceof ChoiceParameter) {
                     ChoiceParameter cParam = (ChoiceParameter) p;
-                    ButtonModel selected = (ButtonModel) fields.get(cParam.getLabel());
+                    ButtonModel selected = ((ButtonGroup) fields.get(cParam.getLabel())).getSelection();
                     String text = selected.getActionCommand();
                     cParam.selected = text;
                 }
@@ -784,7 +784,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
             }
             else if (p instanceof ChoiceParameter) {
                 ChoiceParameter cParam = (ChoiceParameter) p;
-                ButtonModel selected = (ButtonModel) fields.get(cParam.getLabel());
+                ButtonModel selected = ((ButtonGroup) fields.get(cParam.getLabel())).getSelection();
                 String text = selected.getActionCommand();
                 cParam.selected = text;
             }
