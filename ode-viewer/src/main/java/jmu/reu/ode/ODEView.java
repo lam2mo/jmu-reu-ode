@@ -6,7 +6,7 @@ package jmu.reu.ode;
  * Container for the data needed to represent a singular view of an ODE.
  * 
  * @author Mike Lam, Benjamin Huber
- * @version 7/9/2022
+ * @version 10/20/2022
  */
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
@@ -446,6 +446,15 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
         updatePlot();
     }
 
+    /* 
+     * Accessor method for the chartSettingsList attribute.
+     * 
+     * @return the chartSettingsList attribute.
+     */
+    public List<ChartSettings> getChartSettings() {
+        return cSettingsList;
+    }
+
     public void updatePlot()
     {
         try {
@@ -795,11 +804,15 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
 
     @Override
     public void actionPerformed(ActionEvent arg0) {
+        if (updating) return;
         String source = arg0.getActionCommand();
+        updating = true;
         if (source.equals("Points?")) {
             linespoints = !linespoints;
-            updatePlot();
+            
         }
+        updatePlot();
+        updating = false;
         
     }
 }

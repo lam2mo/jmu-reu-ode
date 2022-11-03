@@ -9,15 +9,19 @@ package jmu.reu.ode;
  */
 
 import java.io.*;
+import java.util.List;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-class ODEViewer extends JFrame
+class ODEViewer extends JFrame implements ChangeListener
 {
     // parameter info
     private JTabbedPane mainPanel;
     private CloseTab closeAction;
+    private ODEView currentView;
 
     public ODEViewer() {
         super();
@@ -28,12 +32,21 @@ class ODEViewer extends JFrame
 
         mainPanel = new JTabbedPane();
         cp.add(mainPanel, BorderLayout.CENTER);
+        mainPanel.addChangeListener(this);
 
         setupMenu();
         this.setVisible(true);
         this.setSize(840,950);
 
         mainPanel.setVisible(true);
+    }
+
+    /**
+     * Accessor method for the currently selected ODEView.
+     * @return the currently selected ODEView.
+     */
+    public ODEView getView() {
+        return currentView;
     }
 
     private void setupMenu() {
@@ -48,11 +61,19 @@ class ODEViewer extends JFrame
         NewODEView newODEViewAction = new NewODEView(this);
         newMenu.add(newODEViewAction);
 
+        // View Menu
+        JMenu viewMenu = new JMenu("View");
+        ViewChartSettings viewChartSettingsAction = new ViewChartSettings(this);
+        viewMenu.add(viewChartSettingsAction);
+
+
         // Close action
         fileMenu.add(newMenu);
         closeAction = new CloseTab();
         fileMenu.add(closeAction);
         menuBar.add(fileMenu);
+
+        menuBar.add(viewMenu);
     }
 
     public class CloseTab extends AbstractAction {
@@ -90,5 +111,10 @@ class ODEViewer extends JFrame
                 }
             }
         });
+    }
+
+    @Override
+    public void stateChanged(ChangeEvent e) {
+        currentView = (ODEView) mainPanel.getSelectedComponent();
     }
 }
