@@ -127,6 +127,9 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
                 } else if (line.startsWith("plot")) {
                     plotScript.add(line);
                     chartNum+=1;
+                } else if (line.startsWith("error")) {
+                    plotScript.add(line);
+                    chartNum+=1;
                 } else if (line.startsWith("static series")) {
                     plotScript.add(line);
                 } else if (line.startsWith("series")) {
@@ -262,7 +265,11 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
         int notitleCount = 0;
         for (String plotLine : plotScript) {
             // a "plot" level command
-            if (plotLine.startsWith("plot ")) {
+            
+            if (plotLine.startsWith("error ")) {
+                cSettingsList.add(null);
+            }
+            else if (plotLine.startsWith("plot ")) {
                 chartSettings = new ChartSettings();
                 // Regex to split on spaces when not in single or double quotes (thanks SOF)
                 String[] args = plotLine.split(" +");
@@ -492,7 +499,41 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
             int markIndex = -1;
             for (String line : plotScript) {
                 
-                if (line.startsWith("plot ")) {
+                if (line.startsWith("error ")) {
+                    plotIndex+=1;
+                    datasetIndex = -1;
+                    defaultRenderer = new XYLineAndShapeRenderer(true, linespoints);
+                    plot = new XYPlot(null, new NumberAxis("Aligned Value"), 
+                                        new NumberAxis("Errors"), defaultRenderer);
+                    data = new DefaultXYDataset();
+                    plot.setDataset(data);
+                    JFreeChart chart = new JFreeChart(plot);
+                    charts.get(plotIndex).setChart(chart);
+
+                    String[] args = line.split(" +");
+
+                    String file1 = args[2];
+                    String file2 = args[5];
+
+                    data = new DefaultXYDataset();
+                    plot.setDataset(data);
+
+                    File bigFile1 = new File(fileMap.get(file1).getFileName());
+                    File bigFile2 = new File(fileMap.get(file2).getFileName());
+
+                    String[] cols1 = args[3].split(":");
+                    String[] cols2 = args[6].split(":");
+
+                    data.addSeries(args[1], loadError(bigFile1, Integer.parseInt(cols1[0]),
+                                                                Integer.parseInt(cols1[1]),
+                                                      bigFile2, Integer.parseInt(cols2[0]),
+                                                                Integer.parseInt(cols2[1]),
+                                                      0, 0));
+                    
+                    defaultRenderer.setSeriesPaint(0, profiles.get(args[8]).getLineColor());
+                    defaultRenderer.setSeriesStroke(0, profiles.get(args[8]).getStroke());
+                }
+                else if (line.startsWith("plot ")) {
                     
                     plotIndex+=1;
                     // System.out.println("Plotting plot: " + plotIndex);
@@ -694,6 +735,44 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
         }
         
         return new DataAnalytics(shortenedData);
+    }
+
+    private double[][] loadError(File file1, int xCol1, int yCol1, 
+                                                File file2, int xCol2, int yCol2, int a1Align, int a2Align) {
+        ArrayList<String> file1Lines = loadData(file1, 1);
+        ArrayList<String> file2Lines = loadData(file2, 1);
+
+        DataAnalytics data1 = processData(file1Lines, xCol1, yCol1);
+        DataAnalytics data2 = processData(file2Lines, xCol2, yCol2);
+        
+        return matchCull(data1, data2, a1Align, a2Align);
+    }
+
+    private double[][] matchCull(DataAnalytics data1, DataAnalytics data2, int a1Align, int a2Align) {
+        double[][] array1 = data1.getData();
+        double[][] array2 = data2.getData();
+
+        double[][] output = new double[2][array1[0].length];
+
+        int count = 0;
+        for (int i = 0; i < array1[0].length; i++) {
+            for (int j = 0; j < array2[0].length; j++) {
+                if (array1[a1Align][i] == array2[a2Align][j]) {
+                    output[0][count] = array1[a1Align][i];
+                    output[1][count] = array1[1-a1Align][j] - array2[1-a2Align][j];
+                    count++;
+                    continue;
+                }
+            }
+        }
+
+        double[][] newOutput = new double[2][count];
+        for (int i = 0; i < count; i++) {
+            newOutput[0][i] = output[0][i];
+            newOutput[1][i] = output[1][i];
+        }
+
+        return newOutput;
     }
 
     /**
