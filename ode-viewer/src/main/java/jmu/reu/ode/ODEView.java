@@ -524,11 +524,28 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
                     String[] cols1 = args[3].split(":");
                     String[] cols2 = args[6].split(":");
 
+                    int code;
+
+                    switch (args[1]) {
+                        case "diff":
+                            code = 0;
+                            break;
+                        case "abs":
+                            code = 1;
+                            break;
+                        case "rel":
+                            code = 2;
+                            break;
+                        default:
+                            code = 0;
+                            break;
+                    }
+
                     data.addSeries(args[1], loadError(bigFile1, Integer.parseInt(cols1[0]),
                                                                 Integer.parseInt(cols1[1]),
                                                       bigFile2, Integer.parseInt(cols2[0]),
                                                                 Integer.parseInt(cols2[1]),
-                                                      0, 0));
+                                                      0, 0, code));
                     
                     defaultRenderer.setSeriesPaint(0, profiles.get(args[8]).getLineColor());
                     defaultRenderer.setSeriesStroke(0, profiles.get(args[8]).getStroke());
@@ -738,28 +755,46 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
     }
 
     private double[][] loadError(File file1, int xCol1, int yCol1, 
-                                                File file2, int xCol2, int yCol2, int a1Align, int a2Align) {
+                                                File file2, int xCol2, int yCol2, int a1Align, int a2Align, int code) {
         ArrayList<String> file1Lines = loadData(file1, 1);
         ArrayList<String> file2Lines = loadData(file2, 1);
 
         DataAnalytics data1 = processData(file1Lines, xCol1, yCol1);
         DataAnalytics data2 = processData(file2Lines, xCol2, yCol2);
         
-        return matchCull(data1, data2, a1Align, a2Align);
+        return matchCull(data1, data2, a1Align, a2Align, code);
     }
 
-    private double[][] matchCull(DataAnalytics data1, DataAnalytics data2, int a1Align, int a2Align) {
+    private double[][] matchCull(DataAnalytics data1, DataAnalytics data2, int a1Align, int a2Align,
+                                    int code) {
         double[][] array1 = data1.getData();
         double[][] array2 = data2.getData();
 
-        double[][] output = new double[2][array1[0].length];
+        double[][] output = new double[2][Math.max(array1[0].length, array2[0].length)];
 
         int count = 0;
         for (int i = 0; i < array1[0].length; i++) {
             for (int j = 0; j < array2[0].length; j++) {
                 if (array1[a1Align][i] == array2[a2Align][j]) {
                     output[0][count] = array1[a1Align][i];
-                    output[1][count] = array1[1-a1Align][j] - array2[1-a2Align][j];
+                    double dataPoint; // shouldn't happen
+                    switch(code) {
+                        case 0:
+                            dataPoint = array1[1-a1Align][j] - array2[1-a2Align][j];
+                            break;
+                        case 1:
+                            dataPoint = Math.abs(array1[1-a1Align][j] - array2[1-a2Align][j]);
+                            break;
+                        case 2:
+                            if (array2[1-a2Align][j] == 0) {
+                                continue;
+                            }
+                            dataPoint = array1[1-a1Align][j]/array2[1-a2Align][j];
+                            break;
+                        default:
+                            dataPoint = 80.0;
+                    }
+                    output[1][count] = dataPoint;
                     count++;
                     continue;
                 }
