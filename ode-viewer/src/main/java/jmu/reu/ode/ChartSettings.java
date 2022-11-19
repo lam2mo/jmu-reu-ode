@@ -14,6 +14,8 @@ public class ChartSettings {
     private ValueAxis yAxis;
     private Range xRange;
     private Range yRange;
+    private boolean autoXRange;
+    private boolean autoYRange;
 
     /**
      * Default constructor.
@@ -23,6 +25,8 @@ public class ChartSettings {
         yAxis = null;
         xRange = null;
         yRange = null;
+        autoXRange = true;
+        autoYRange = true;
     }
 
     /**
@@ -62,6 +66,24 @@ public class ChartSettings {
     }
 
     /**
+     * Accessor method for autoXRange attribute.
+     * 
+     * @return autoXRange attribute
+     */
+    public boolean getAutoXRange() {
+        return autoXRange;
+    }
+
+    /**
+     * Accessor method for autoYRange attibute.
+     * 
+     * @return autoYRange attribute
+     */
+    public boolean getAutoYRange() {
+        return autoYRange;
+    }
+
+    /**
      * Mutator method for xAxis attribute.
      * 
      * @param newAxis the new xAxis
@@ -95,5 +117,23 @@ public class ChartSettings {
      */
     public void setYRange(Range newRange) {
         this.yRange = newRange;
+    }
+
+    /**
+     * Mutator method for autoXRange attribute.
+     * 
+     * @param auto whether the x Axis should be autoRanged or not.
+     */
+    public void setAutoXRange(boolean auto) {
+        this.autoXRange = auto;
+    }
+
+    /**
+     * Mutator method for autoYRange attribute
+     * 
+     * @param auto whether the y Axis should be autoRanged or not.
+     */
+    public void setAutoYRange(boolean auto) {
+        this.autoYRange = auto;
     }
 }

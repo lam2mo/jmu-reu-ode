@@ -14,7 +14,12 @@ public class ChartSettingsViewer extends JPanel {
         this.setLayout(new GridLayout(n, n, 2, 2));
         
         for (ChartSettings settings : cSettingsList) {
-            ChartSettingsPanel panel = new ChartSettingsPanel(parent, settings);
+            ChartSettingsPanel panel;
+            if (settings.getXAxis() == null) {
+                panel = new ChartSettingsPanel(parent, null);
+            } else {
+                panel = new ChartSettingsPanel(parent, settings);
+            }
             this.add(panel);
         }
     }

@@ -40,10 +40,12 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.LogAxis;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.ui.Layer;
+import org.jfree.data.Range;
 import org.jfree.data.xy.DefaultXYDataset;
 
 import javax.swing.JLabel;
@@ -267,7 +269,7 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
             // a "plot" level command
             
             if (plotLine.startsWith("error ")) {
-                cSettingsList.add(null);
+                cSettingsList.add(new ChartSettings());
             }
             else if (plotLine.startsWith("plot ")) {
                 chartSettings = new ChartSettings();
@@ -281,6 +283,14 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
                 switch(args[2]) {
                     case "num":
                         chartSettings.setXAxis(new NumberAxis(args[4]));
+                        if (!args[3].equals("[::]")) {
+                            String rangeValues = args[3].substring(1, args[3].length() - 1);
+                            String[] rangeValuesList = rangeValues.split(":");
+                            double lowerBound = Double.parseDouble(rangeValuesList[0]);
+                            double upperBound = Double.parseDouble(rangeValuesList[2]);
+                            chartSettings.setXRange(new Range(lowerBound, upperBound));
+                            chartSettings.setAutoXRange(false);
+                        }
                         break;
                     case "log":
                         chartSettings.setXAxis(new LogAxis(args[4]));
@@ -291,6 +301,14 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
                 switch(args[6]) {
                     case "num":
                         chartSettings.setYAxis(new NumberAxis(args[8]));
+                        if (!args[7].equals("[::]")) {
+                            String rangeValues = args[7].substring(1, args[7].length() - 1);
+                            String[] rangeValuesList = rangeValues.split(":");
+                            double lowerBound = Double.parseDouble(rangeValuesList[0]);
+                            double upperBound = Double.parseDouble(rangeValuesList[2]);
+                            chartSettings.setYRange(new Range(lowerBound, upperBound));
+                            chartSettings.setAutoYRange(false);
+                        }
                         break;
                     case "log":
                         chartSettings.setYAxis(new LogAxis(args[8]));
@@ -298,8 +316,8 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
                     default:
                         throw new InvalidConfigFormatException("Invalid yaxis types specified");
                 }
+                
                 cSettingsList.add(chartSettings);
-                // TODO: Set Ranges if specified
             }
             // Put series settings in sSettings map (should make array later) will recode this whole
             // thing later
@@ -557,8 +575,15 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
                     datasetIndex = -1;
                     chartSettings = cSettingsList.get(plotIndex);
                     defaultRenderer = new XYLineAndShapeRenderer(true, linespoints);
-                    plot = new XYPlot(null, chartSettings.getXAxis(), chartSettings.getYAxis(), 
-                                        defaultRenderer);
+                    ValueAxis xAxis = chartSettings.getXAxis();
+                    ValueAxis yAxis = chartSettings.getYAxis();
+                    if (!chartSettings.getAutoXRange()) {
+                        xAxis.setRange(chartSettings.getXRange());
+                    }
+                    if (!chartSettings.getAutoYRange()) {
+                        yAxis.setRange(chartSettings.getYRange());
+                    }
+                    plot = new XYPlot(null, xAxis, yAxis, defaultRenderer);
                     data = new DefaultXYDataset();
                     plot.setDataset(data);
                     JFreeChart chart = new JFreeChart(plot);

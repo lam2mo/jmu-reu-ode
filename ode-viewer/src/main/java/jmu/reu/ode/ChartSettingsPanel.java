@@ -31,6 +31,11 @@ public class ChartSettingsPanel extends JPanel implements ChangeListener {
 
         this.settings = chartSettings;
         this.parent = parent;
+
+        if (chartSettings == null) {
+            this.add(new JLabel("Settings not available for this chart"));
+            return;
+        }
         
         JLabel xAxisLabel = new JLabel("xAxis Type");
         JRadioButton xAxisLog = new JRadioButton("Log");
