@@ -1,4 +1,4 @@
-package jmu.reu.ode;
+package jmu.reu.ode.app;
 /**
  * JMU REU 2021
  *
@@ -9,14 +9,17 @@ package jmu.reu.ode;
  */
 
 import java.io.*;
-import java.util.List;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-class ODEViewer extends JFrame implements ChangeListener
+import jmu.reu.ode.actions.NewODEView;
+import jmu.reu.ode.actions.ViewChartSettings;
+import jmu.reu.ode.view.ODEView;
+
+public class ODEViewer extends JFrame implements ChangeListener
 {
     // parameter info
     private JTabbedPane mainPanel;

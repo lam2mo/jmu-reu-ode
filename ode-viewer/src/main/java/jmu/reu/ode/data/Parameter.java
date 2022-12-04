@@ -1,4 +1,4 @@
-package jmu.reu.ode;
+package jmu.reu.ode.data;
 
 /**
  * An abstract class used to identify what it means to be a parameter.  This class should do 

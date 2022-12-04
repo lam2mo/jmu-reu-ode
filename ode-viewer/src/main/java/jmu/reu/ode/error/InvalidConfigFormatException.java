@@ -1,4 +1,4 @@
-package jmu.reu.ode;
+package jmu.reu.ode.error;
 
 /**
  * A class that encapsulates an exception that is thrown when our config file has some invalid 

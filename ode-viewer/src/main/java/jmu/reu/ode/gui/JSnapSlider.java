@@ -1,4 +1,4 @@
-package jmu.reu.ode;
+package jmu.reu.ode.gui;
 
 import javax.swing.JSlider;
 

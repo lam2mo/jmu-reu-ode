@@ -1,8 +1,11 @@
-package jmu.reu.ode;
+package jmu.reu.ode.actions;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
+
+import jmu.reu.ode.app.ODEViewer;
+import jmu.reu.ode.view.ODEView;
 
 /**
  * A class that encapsulates the action of creating a new ODEView.

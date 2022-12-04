@@ -1,4 +1,4 @@
-package jmu.reu.ode;
+package jmu.reu.ode.data;
 
 /**
  * A class that keeps track of data and important info about it such as min and max so that we can

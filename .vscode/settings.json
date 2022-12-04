@@ -2,5 +2,6 @@
     "files.associations": {
         "chrono": "cpp",
         "utility": "cpp"
-    }
+    },
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

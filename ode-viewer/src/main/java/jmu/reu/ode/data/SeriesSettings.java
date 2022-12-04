@@ -1,4 +1,4 @@
-package jmu.reu.ode;
+package jmu.reu.ode.data;
 
 /**
  * A class that represents all the info we need to chart a single series. This includes things such

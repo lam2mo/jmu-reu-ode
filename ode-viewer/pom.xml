@@ -41,7 +41,7 @@
           <configuration>
             <archive>
               <manifest>
-                <mainClass>jmu.reu.ode.ODEViewer</mainClass>
+                <mainClass>jmu.reu.ode.app.ODEViewer</mainClass>
               </manifest>
             </archive>
             <descriptorRefs>

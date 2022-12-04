@@ -1,4 +1,4 @@
-package jmu.reu.ode;
+package jmu.reu.ode.data;
 
 public class ChoiceParameter extends Parameter {
     public String[] options;
@@ -6,8 +6,7 @@ public class ChoiceParameter extends Parameter {
     public ChoiceParameter(String label, String... choices) {
         super(label);
         options = new String[choices.length];
-        int i = 0;
-        for (String choice : choices) {
+        for (int i = 0; i < choices.length; i++) {
             options[i] = choices[i];
             i++;
         }

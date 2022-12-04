@@ -1,5 +1,5 @@
 
-package jmu.reu.ode;
+package jmu.reu.ode.view;
 /**
  * JMU REU 2022
  * 
@@ -48,6 +48,19 @@ import org.jfree.chart.ui.Layer;
 import org.jfree.data.Range;
 import org.jfree.data.xy.DefaultXYDataset;
 
+import jmu.reu.ode.data.ChoiceParameter;
+import jmu.reu.ode.data.DataAnalytics;
+import jmu.reu.ode.data.FileSettings;
+import jmu.reu.ode.data.LineProfile;
+
+import jmu.reu.ode.data.MarkSettings;
+import jmu.reu.ode.data.NumericParameter;
+import jmu.reu.ode.data.Parameter;
+import jmu.reu.ode.data.SeriesSettings;
+import jmu.reu.ode.error.InvalidConfigFormatException;
+import jmu.reu.ode.gui.JSnapSlider;
+import jmu.reu.ode.settings.ChartSettings;
+
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -57,7 +70,6 @@ import javax.swing.JTextField;
 
 public class ODEView extends JPanel implements ChangeListener, DocumentListener, ActionListener {
     private final double PARAM_FACTOR = 100.0;
-    private boolean ghosting = false;
     private boolean updating = false;
     private int chartNum = 0;
     private JLabel description;
@@ -72,7 +84,6 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
     private Map<String, Parameter> parameters;
     private Map<String, LineProfile> profiles;
     private Map<String, FileSettings> fileMap;
-    private MapQueueLimited<String, double[][]> ghosts;
     private List<SeriesSettings> sSettings;
     private List<MarkSettings> mSettings;
     private String title;
@@ -802,22 +813,22 @@ public class ODEView extends JPanel implements ChangeListener, DocumentListener,
             for (int j = 0; j < array2[0].length; j++) {
                 if (array1[a1Align][i] == array2[a2Align][j]) {
                     output[0][count] = array1[a1Align][i];
-                    double dataPoint; // shouldn't happen
+                    double dataPoint;
                     switch(code) {
                         case 0:
-                            dataPoint = array1[1-a1Align][j] - array2[1-a2Align][j];
+                            dataPoint = array1[1-a1Align][i] - array2[1-a2Align][j];
                             break;
                         case 1:
-                            dataPoint = Math.abs(array1[1-a1Align][j] - array2[1-a2Align][j]);
+                            dataPoint = Math.abs(array1[1-a1Align][i] - array2[1-a2Align][j]);
                             break;
                         case 2:
                             if (array2[1-a2Align][j] == 0) {
                                 continue;
                             }
-                            dataPoint = array1[1-a1Align][j]/array2[1-a2Align][j];
+                            dataPoint = Math.abs(array1[1-a1Align][i] - array2[1-a2Align][j])/array2[1-a2Align][j];
                             break;
                         default:
-                            dataPoint = 80.0;
+                            dataPoint = 80.0; // shouldn't happen
                     }
                     output[1][count] = dataPoint;
                     count++;

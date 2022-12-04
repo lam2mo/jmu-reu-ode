@@ -1,4 +1,4 @@
-package jmu.reu.ode;
+package jmu.reu.ode.data;
 
 import java.awt.Color;
 import java.awt.BasicStroke;

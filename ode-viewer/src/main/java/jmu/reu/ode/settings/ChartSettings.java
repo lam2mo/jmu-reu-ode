@@ -1,4 +1,4 @@
-package jmu.reu.ode;
+package jmu.reu.ode.settings;
 
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.data.Range;

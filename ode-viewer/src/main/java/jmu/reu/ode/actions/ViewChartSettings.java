@@ -1,10 +1,14 @@
-package jmu.reu.ode;
+package jmu.reu.ode.actions;
 
 import java.util.List;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.JFrame;
+
+import jmu.reu.ode.app.ODEViewer;
+import jmu.reu.ode.settings.ChartSettings;
+import jmu.reu.ode.settings.ChartSettingsViewer;
 
 /**
  * A class that encapsulates the action of opening a ChartSettingsPanel.

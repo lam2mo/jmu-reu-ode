@@ -1,4 +1,4 @@
-package jmu.reu.ode;
+package jmu.reu.ode.data;
 /**
  * A class that implements a Map that contains a Key, LimitedQueue pair.
  * @author Benjamin Huber

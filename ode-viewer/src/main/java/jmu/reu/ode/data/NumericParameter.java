@@ -1,4 +1,5 @@
-package jmu.reu.ode;
+package jmu.reu.ode.data;
+
 /**
  * JMU REU 2022
  * 

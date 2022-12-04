@@ -1,4 +1,4 @@
-package jmu.reu.ode;
+package jmu.reu.ode.data;
 
 /**
  * A class that defines Settings for drawing Marks on a chart.

@@ -1,8 +1,10 @@
-package jmu.reu.ode;
+package jmu.reu.ode.settings;
 
+import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -12,6 +14,8 @@ import javax.swing.event.ChangeListener;
 
 import org.jfree.chart.axis.LogAxis;
 import org.jfree.chart.axis.NumberAxis;
+
+import jmu.reu.ode.view.ODEView;
 
 /**
  * A JPanel that contains options for editing the chartSettings of a 
@@ -36,6 +40,9 @@ public class ChartSettingsPanel extends JPanel implements ChangeListener {
             this.add(new JLabel("Settings not available for this chart"));
             return;
         }
+
+        JLabel graphName = new JLabel(chartSettings.getXAxis().getLabel() + " vs. " + 
+                                      chartSettings.getYAxis().getLabel());
         
         JLabel xAxisLabel = new JLabel("xAxis Type");
         JRadioButton xAxisLog = new JRadioButton("Log");
@@ -81,6 +88,7 @@ public class ChartSettingsPanel extends JPanel implements ChangeListener {
         yChoicePanel.add(yAxisNum);
         yChoicePanel.add(yAxisLog);
 
+        this.add(graphName);
         this.add(xChoicePanel);
         this.add(yChoicePanel);
 
@@ -90,6 +98,7 @@ public class ChartSettingsPanel extends JPanel implements ChangeListener {
         yAxisNum.addChangeListener(this);
         yAxisLog.addChangeListener(this);
         
+        this.setBorder(BorderFactory.createLineBorder(Color.gray));
     }
 
     @Override

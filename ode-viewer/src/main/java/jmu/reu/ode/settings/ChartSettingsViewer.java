@@ -1,9 +1,11 @@
-package jmu.reu.ode;
+package jmu.reu.ode.settings;
 
 import java.util.List;
 import java.awt.GridLayout;
 
 import javax.swing.JPanel;
+
+import jmu.reu.ode.view.ODEView;
 
 public class ChartSettingsViewer extends JPanel {
     public ChartSettingsViewer(ODEView parent, List<ChartSettings> cSettingsList) {

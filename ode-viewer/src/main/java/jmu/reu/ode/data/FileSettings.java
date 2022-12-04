@@ -1,4 +1,4 @@
-package jmu.reu.ode;
+package jmu.reu.ode.data;
 
 /**
  * A class that defines the settings pertaining to how to use a file.
